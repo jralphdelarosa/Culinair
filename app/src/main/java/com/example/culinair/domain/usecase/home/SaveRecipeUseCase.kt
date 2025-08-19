@@ -1,5 +1,6 @@
 package com.example.culinair.domain.usecase.home
 
+import com.example.culinair.data.remote.dto.response.SaveResponse
 import com.example.culinair.domain.repository.HomeRepository
 import javax.inject.Inject
 
@@ -9,7 +10,7 @@ import javax.inject.Inject
 class SaveRecipeUseCase @Inject constructor(
     private val repository: HomeRepository
 ) {
-    suspend operator fun invoke(userId: String, recipeId: String, token: String): Boolean {
-        return repository.saveRecipe(userId, recipeId, token)
+    suspend operator fun invoke(recipeId: String, userId: String, token: String): SaveResponse? {
+        return repository.saveRecipe(recipeId, userId, token)
     }
 }

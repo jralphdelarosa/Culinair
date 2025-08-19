@@ -1,11 +1,9 @@
 package com.example.culinair.presentation.screens.auth
 
 import android.app.Activity
-import android.content.res.Resources
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,12 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -45,7 +38,7 @@ import com.example.culinair.R
 import com.example.culinair.presentation.components.CulinairButton
 import com.example.culinair.presentation.components.CulinairTextField
 import com.example.culinair.presentation.dialogs.CircularLogoWithLoadingRing
-import com.example.culinair.presentation.theme.BrandBackgroundYellow
+import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGold
 import com.example.culinair.presentation.viewmodel.auth.AuthViewModel
 import kotlinx.coroutines.delay
@@ -103,7 +96,7 @@ fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel = hil
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BrandBackgroundYellow)
+                .background(BrandBackground)
                 .padding(24.dp),
             verticalArrangement = Arrangement.Center
         ) {

@@ -2,6 +2,7 @@ package com.example.culinair.domain.repository
 
 import com.example.culinair.data.remote.dto.response.LikeResponse
 import com.example.culinair.data.remote.dto.response.RecipeLikeResponse
+import com.example.culinair.data.remote.dto.response.SaveResponse
 import com.example.culinair.domain.model.RecipePreviewUiModel
 
 /**
@@ -14,6 +15,6 @@ interface HomeRepository {
     suspend fun getRecommendedRecipes(userId: String, token: String): List<RecipePreviewUiModel>
     suspend fun getRecipesByCategory(userId: String, category: String, token: String): List<RecipePreviewUiModel>
     suspend fun likeRecipe(recipeId: String, userId: String, token: String): LikeResponse?
-    suspend fun saveRecipe(userId: String, recipeId: String, token: String): Boolean
-    suspend fun unsaveRecipe(userId: String, recipeId: String, token: String): Boolean
+    suspend fun saveRecipe(recipeId: String, userId: String, token: String): SaveResponse?
+//    suspend fun unsaveRecipe(userId: String, recipeId: String, token: String): Boolean
 }

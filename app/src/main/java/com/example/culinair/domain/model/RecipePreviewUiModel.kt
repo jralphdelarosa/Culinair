@@ -20,7 +20,8 @@ data class RecipePreviewUiModel(
     val isLiked: Boolean = false,
     val likesCount: Int,
     // Check if current user has liked this recipe
-    val isLikedByCurrentUser: Boolean = false
+    val isLikedByCurrentUser: Boolean = false,
+    val isSavedByCurrentUser: Boolean = false
 
 )
 
@@ -40,7 +41,7 @@ fun HomeRecipeResponse.toPreviewUi(currentUserId: String): RecipePreviewUiModel 
         isLiked = isLiked,
         likesCount = likesCount,
         // Check if current user has liked this recipe
-        isLikedByCurrentUser = recipeLikes?.any { it.userId == currentUserId } == true
-
+        isLikedByCurrentUser = recipeLikes?.any { it.userId == currentUserId } == true,
+        isSavedByCurrentUser = recipeSaves?.any { it.userId == currentUserId } == true
     )
 }

@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.culinair.presentation.theme.BrandBackgroundYellow
+import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGold
 
 /**
@@ -67,7 +67,7 @@ fun ErrorDialog(
                     }
                 }
             } else null,
-            containerColor = BrandBackgroundYellow,
+            containerColor = BrandBackground,
             shape = RoundedCornerShape(16.dp)
         )
     }

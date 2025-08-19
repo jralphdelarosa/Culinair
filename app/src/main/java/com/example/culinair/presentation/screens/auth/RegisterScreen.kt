@@ -40,7 +40,7 @@ import com.example.culinair.data.repository.RegisterResult
 import com.example.culinair.presentation.components.CulinairButton
 import com.example.culinair.presentation.components.CulinairTextField
 import com.example.culinair.presentation.dialogs.CircularLogoWithLoadingRing
-import com.example.culinair.presentation.theme.BrandBackgroundYellow
+import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGold
 import com.example.culinair.presentation.viewmodel.auth.AuthViewModel
 import kotlinx.coroutines.delay
@@ -92,7 +92,7 @@ fun RegisterScreen(navController: NavHostController, viewModel: AuthViewModel = 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BrandBackgroundYellow)
+                .background(BrandBackground)
                 .padding(24.dp),
             verticalArrangement = Arrangement.Center
         ) {

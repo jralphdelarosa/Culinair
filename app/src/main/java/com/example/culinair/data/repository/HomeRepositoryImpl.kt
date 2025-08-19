@@ -5,6 +5,7 @@ import com.example.culinair.data.remote.apiservice.HomeApiService
 import com.example.culinair.data.remote.dto.request.SaveRecipeRequest
 import com.example.culinair.data.remote.dto.response.LikeResponse
 import com.example.culinair.data.remote.dto.response.RecipeLikeResponse
+import com.example.culinair.data.remote.dto.response.SaveResponse
 import com.example.culinair.domain.model.RecipePreviewUiModel
 import com.example.culinair.domain.model.toPreviewUi
 import com.example.culinair.domain.repository.HomeRepository
@@ -129,35 +130,32 @@ class HomeRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveRecipe(userId: String, recipeId: String, token: String): Boolean {
+    override suspend fun saveRecipe(recipeId: String, userId: String, token: String): SaveResponse? {
         return try {
-            val response = service.saveRecipe("Bearer $token", SaveRecipeRequest(userId, recipeId))
-            if (!response.isSuccessful) {
-                Log.e(TAG, "saveRecipe failed: ${response.code()} - ${response.errorBody()?.string()}")
-            }
-            response.isSuccessful
-        } catch (e: HttpException) {
-            Log.e(TAG, "saveRecipe exception: ${e.code()} - ${e.response()?.errorBody()?.string()}")
-            false
+            val response = service.saveRecipe(
+                token = "Bearer $token",
+                body = mapOf("recipe_id" to recipeId, "user_id" to userId)
+            )
+            if (response.isSuccessful) response.body() else null
         } catch (e: Exception) {
             Log.e(TAG, "saveRecipe exception: ${e.message}", e)
-            false
+            null
         }
     }
 
-    override suspend fun unsaveRecipe(userId: String, recipeId: String, token: String): Boolean {
-        return try {
-            val response = service.unsaveRecipe("Bearer $token", userId = "eq.$userId", recipeId = "eq.$recipeId")
-            if (!response.isSuccessful) {
-                Log.e(TAG, "unsaveRecipe failed: ${response.code()} - ${response.errorBody()?.string()}")
-            }
-            response.isSuccessful
-        } catch (e: HttpException) {
-            Log.e(TAG, "unsaveRecipe exception: ${e.code()} - ${e.response()?.errorBody()?.string()}")
-            false
-        } catch (e: Exception) {
-            Log.e(TAG, "unsaveRecipe exception: ${e.message}", e)
-            false
-        }
-    }
+//    override suspend fun unsaveRecipe(userId: String, recipeId: String, token: String): Boolean {
+//        return try {
+//            val response = service.unsaveRecipe("Bearer $token", userId = "eq.$userId", recipeId = "eq.$recipeId")
+//            if (!response.isSuccessful) {
+//                Log.e(TAG, "unsaveRecipe failed: ${response.code()} - ${response.errorBody()?.string()}")
+//            }
+//            response.isSuccessful
+//        } catch (e: HttpException) {
+//            Log.e(TAG, "unsaveRecipe exception: ${e.code()} - ${e.response()?.errorBody()?.string()}")
+//            false
+//        } catch (e: Exception) {
+//            Log.e(TAG, "unsaveRecipe exception: ${e.message}", e)
+//            false
+//        }
+//    }
 }

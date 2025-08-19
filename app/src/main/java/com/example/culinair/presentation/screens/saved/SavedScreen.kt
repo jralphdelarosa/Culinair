@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.culinair.presentation.theme.BrandBackgroundYellow
+import com.example.culinair.presentation.theme.BrandBackground
 
 /**
  * Created by John Ralph Dela Rosa on 7/26/2025.
@@ -23,7 +23,7 @@ fun SavedScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BrandBackgroundYellow) // Light yellowish
+            .background(BrandBackground) // Light yellowish
             .padding(24.dp)
     ) {
         Text(

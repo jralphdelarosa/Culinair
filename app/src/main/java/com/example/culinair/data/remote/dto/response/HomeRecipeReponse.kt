@@ -38,5 +38,8 @@ data class HomeRecipeResponse(
     val userProfile: UserProfileMini?,
     // This will contain the current user's like record if they liked it
     @SerializedName("recipe_likes")
-    val recipeLikes: List<RecipeLikeResponse>? = null
+    val recipeLikes: List<RecipeLikeResponse>? = null,
+    // This will contain the current user's save record if they liked it
+    @SerializedName("recipe_saves")
+    val recipeSaves: List<RecipeSaveResponse>? = null
 )

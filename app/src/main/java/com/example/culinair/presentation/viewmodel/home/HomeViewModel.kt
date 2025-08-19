@@ -32,7 +32,7 @@ class HomeViewModel @Inject constructor(
     private val getRecommendedRecipesUseCase: GetRecommendedRecipesUseCase,
     private val likeRecipeUseCase: LikeRecipeUseCase,
     private val saveRecipeUseCase: SaveRecipeUseCase,
-    private val unsaveRecipeUseCase: UnsaveRecipeUseCase
+//    private val unsaveRecipeUseCase: UnsaveRecipeUseCase
 ) : ViewModel() {
 
     private val _allPublicRecipes = MutableStateFlow<List<RecipePreviewUiModel>>(emptyList())
@@ -57,7 +57,7 @@ class HomeViewModel @Inject constructor(
             trendingRecipes,
             recommendedRecipes,
             allPublicRecipes
-        ) { filter, following, trending, recommended, allPublic  ->
+        ) { filter, following, trending, recommended, allPublic ->
             when (filter) {
                 HomeFilter.ALL -> allPublic
                 HomeFilter.FOLLOWING -> following
@@ -83,10 +83,10 @@ class HomeViewModel @Inject constructor(
             val token = sessionManager.getAccessToken() ?: return@launch
             val userId = sessionManager.getUserId() ?: return@launch
 
-            _allPublicRecipes.value = getAllPublicRecipesUseCase(userId,token)
+            _allPublicRecipes.value = getAllPublicRecipesUseCase(userId, token)
             _followingRecipes.value = getFollowingRecipesUseCase(userId, token)
-            _trendingRecipes.value = getTrendingRecipesUseCase(userId,token)
-            _recommendedRecipes.value = getRecommendedRecipesUseCase(userId,token)
+            _trendingRecipes.value = getTrendingRecipesUseCase(userId, token)
+            _recommendedRecipes.value = getRecommendedRecipesUseCase(userId, token)
         }
     }
 
@@ -98,7 +98,7 @@ class HomeViewModel @Inject constructor(
             val result = likeRecipeUseCase(recipeId, userId, token)
             result?.let { likeResponse ->
                 // Optimistically update the UI
-                updateRecipeLikeStatus(recipeId, likeResponse.liked, likeResponse.likes_count)
+                updateRecipeLikeStatus(recipeId, likeResponse.liked, likeResponse.likesCount)
             }
         }
     }
@@ -117,30 +117,59 @@ class HomeViewModel @Inject constructor(
             } else recipe
         }
 
-        // Update other lists similarly...
+        _trendingRecipes.value = _trendingRecipes.value.map { recipe ->
+            if (recipe.id == recipeId) {
+                recipe.copy(isLikedByCurrentUser = isLiked, likes = newLikesCount)
+            } else recipe
+
+        }
+    }
+
+    private fun updateRecipeSaveStatus(recipeId: String, isSaved: Boolean, newSavesCount: Int) {
+        // Update all recipe lists
+        _allPublicRecipes.value = _allPublicRecipes.value.map { recipe ->
+            if (recipe.id == recipeId) {
+                recipe.copy(isSavedByCurrentUser = isSaved, saves = newSavesCount)
+            } else recipe
+        }
+
+        _followingRecipes.value = _followingRecipes.value.map { recipe ->
+            if (recipe.id == recipeId) {
+                recipe.copy(isSavedByCurrentUser = isSaved, saves = newSavesCount)
+            } else recipe
+        }
+
+        _trendingRecipes.value = _trendingRecipes.value.map { recipe ->
+            if (recipe.id == recipeId) {
+                recipe.copy(isSavedByCurrentUser = isSaved, saves = newSavesCount)
+            } else recipe
+
+        }
     }
 
     fun saveRecipe(recipeId: String) {
         viewModelScope.launch {
             val token = sessionManager.getAccessToken() ?: return@launch
             val userId = sessionManager.getUserId() ?: return@launch
-            val success = saveRecipeUseCase(userId, recipeId, token)
-            if (success) {
-                loadHomeContent() // or update state manually
+
+            val result = saveRecipeUseCase(recipeId, userId, token)
+            result?.let { saveResponse ->
+                // Optimistically update the UI
+                updateRecipeSaveStatus(recipeId, saveResponse.saved, saveResponse.savesCount)
             }
         }
     }
 
-    fun unsaveRecipe(recipeId: String) {
-        viewModelScope.launch {
-            val token = sessionManager.getAccessToken() ?: return@launch
-            val userId = sessionManager.getUserId() ?: return@launch
-            val success = unsaveRecipeUseCase(userId, recipeId, token)
-            if (success) {
-                loadHomeContent()
-            }
-        }
-    }
+//    fun unsaveRecipe(recipeId: String) {
+//        viewModelScope.launch {
+//            val token = sessionManager.getAccessToken() ?: return@launch
+//            val userId = sessionManager.getUserId() ?: return@launch
+//            val success = unsaveRecipeUseCase(userId, recipeId, token)
+//            if (success) {
+//                loadHomeContent()
+//            }
+//        }
+//    }
 }
 
 enum class HomeFilter {

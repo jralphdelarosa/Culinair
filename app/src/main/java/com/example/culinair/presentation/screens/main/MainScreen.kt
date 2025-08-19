@@ -23,7 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.culinair.presentation.dialogs.WelcomeDialog
 import com.example.culinair.presentation.navost.BottomNavScreen.Companion.bottomNavItems
 import com.example.culinair.presentation.navost.MainNavHost
-import com.example.culinair.presentation.theme.BrandBackgroundYellow
+import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGold
 
 /**
@@ -40,7 +40,7 @@ fun MainScreen(deepLinked: Boolean, culinairNavController: NavController) {
     Scaffold(
         bottomBar = {
             BottomNavigation(
-                backgroundColor = BrandBackgroundYellow,
+                backgroundColor = BrandBackground,
                 modifier = Modifier.navigationBarsPadding() // Add bottom padding
             ) {
                 bottomNavItems.forEach { screen ->

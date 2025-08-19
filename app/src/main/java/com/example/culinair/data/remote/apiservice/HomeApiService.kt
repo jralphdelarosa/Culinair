@@ -4,6 +4,7 @@ import com.example.culinair.data.remote.dto.request.SaveRecipeRequest
 import com.example.culinair.data.remote.dto.response.HomeRecipeResponse
 import com.example.culinair.data.remote.dto.response.LikeResponse
 import com.example.culinair.data.remote.dto.response.RecipeLikeResponse
+import com.example.culinair.data.remote.dto.response.SaveResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -71,21 +72,22 @@ interface HomeApiService {
         @Body body: Map<String, String> // { "recipe_id": "abc-123", "user_id": "def-456" }
     ): Response<LikeResponse>
 
-    @POST("rest/v1/bookmarks")
+    @POST("rest/v1/rpc/save_recipe")
     suspend fun saveRecipe(
-        @Header("Authorization") token: String, @Body saveRequest: SaveRecipeRequest
-    ): Response<Unit>
-
-    @DELETE("rest/v1/bookmarks")
-    suspend fun unsaveRecipe(
         @Header("Authorization") token: String,
-        @Query("user_id") userId: String,
-        @Query("recipe_id") recipeId: String
-    ): Response<Unit>
+        @Body body: Map<String, String>
+    ): Response<SaveResponse>
+
+//    @DELETE("rest/v1/bookmarks")
+//    suspend fun unsaveRecipe(
+//        @Header("Authorization") token: String,
+//        @Query("user_id") userId: String,
+//        @Query("recipe_id") recipeId: String
+//    ): Response<Unit>
 
     companion object {
         const val SELECT_RECIPE_WITH_USER  = "*, user_profiles!left(id, display_name, avatar_url)"
         // This query will check if current user liked the recipe
-        const val SELECT_RECIPE_WITH_USER_AND_LIKES  = "*, user_profiles!left(id, display_name, avatar_url), recipe_likes!left(user_id)"
+        const val SELECT_RECIPE_WITH_USER_AND_LIKES  = "*, user_profiles!left(id, display_name, avatar_url), recipe_likes!left(user_id), recipe_saves!left(user_id)"
     }
 }

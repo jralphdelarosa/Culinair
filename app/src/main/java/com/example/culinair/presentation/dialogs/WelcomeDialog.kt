@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.example.culinair.presentation.theme.BrandBackgroundYellow
+import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGold
 
 /**
@@ -24,7 +24,7 @@ fun WelcomeDialog(onDismiss: () -> Unit) {
         },
         title = { Text("Email Confirmed!", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
         text = { Text("Welcome to Culinair! Your email has been confirmed. Let’s get cooking!") },
-        containerColor = BrandBackgroundYellow,
+        containerColor = BrandBackground,
         titleContentColor = Color(0xFF2F4F4F),
         textContentColor = Color(0xFF2F4F4F)
     )

@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -27,7 +29,6 @@ import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -57,7 +58,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.culinair.domain.model.RecipePreviewUiModel
-import com.example.culinair.presentation.theme.BrandBackgroundYellow
+import com.example.culinair.presentation.theme.AppStandardYellow
+import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGreen
 import com.example.culinair.presentation.viewmodel.home.HomeFilter
 import com.example.culinair.presentation.viewmodel.home.HomeViewModel
@@ -85,7 +87,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BrandBackgroundYellow)
+                .background(BrandBackground)
                 .padding(16.dp)
         ) {
             item { HomeHeader({}, {}) }
@@ -225,7 +227,11 @@ fun RecipeCard(
                         .padding(8.dp)
                         .background(Color.White.copy(alpha = 0.7f), CircleShape)
                 ) {
-                    Icon(Icons.Outlined.BookmarkBorder, contentDescription = "Save")
+                    Icon(
+                        imageVector = if(recipe.isSavedByCurrentUser) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                        contentDescription = "Like",
+                        tint = if (recipe.isSavedByCurrentUser) AppStandardYellow else Color.Gray
+                    )
                 }
             }
 

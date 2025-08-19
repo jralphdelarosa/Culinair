@@ -24,7 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.culinair.R
-import com.example.culinair.presentation.theme.BrandBackgroundYellow
+import com.example.culinair.presentation.theme.BrandBackground
 
 /**
  * Created by John Ralph Dela Rosa on 7/25/2025.
@@ -32,7 +32,7 @@ import com.example.culinair.presentation.theme.BrandBackgroundYellow
 @Composable
 fun CircularLogoWithLoadingRing(
     ringColor: Color = Color(0xFFB88C00), // Gold color
-    backgroundColor: Color = BrandBackgroundYellow // Light yellowish background
+    backgroundColor: Color = BrandBackground // Light yellowish background
 ) {
     val infiniteTransition = rememberInfiniteTransition()
 
