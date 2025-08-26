@@ -19,6 +19,7 @@ composeBom = "2024.09.00"
 hilt = "2.56.2"
 hiltNavigationCompose = "1.2.0"
 ksp = "2.0.21-1.0.27"
+lottieCompose = "6.6.7"
 navigationRuntimeAndroid = "2.9.2"
 playServicesAuth = "21.4.0"
 postgrestKt = "3.2.2"
@@ -64,6 +65,7 @@ androidx-navigation-runtime-android = { group = "androidx.navigation", name = "n
 
 #Retrofit & OkHttp
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 retrofit-core = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 okhttp-core = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }

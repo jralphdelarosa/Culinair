@@ -37,33 +37,37 @@ fun MainScreen(deepLinked: Boolean, culinairNavController: NavController) {
     val currentBackStack by mainTabsNavController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
 
+    val hideBottomBar = currentRoute?.startsWith("recipe_detail") == true
+
     Scaffold(
         bottomBar = {
-            BottomNavigation(
-                backgroundColor = BrandBackground,
-                modifier = Modifier.navigationBarsPadding() // Add bottom padding
-            ) {
-                bottomNavItems.forEach { screen ->
-                    BottomNavigationItem(
-                        icon = { Icon(screen.icon, contentDescription = screen.label) },
-                        label = {
-                            Text(
-                                text = screen.label,
-                                fontSize = 10.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        },
-                        selected = currentRoute == screen.route,
-                        onClick = {
-                            mainTabsNavController.navigate(screen.route) {
-                                popUpTo("home") { inclusive = false }
-                                launchSingleTop = true
-                            }
-                        },
-                        selectedContentColor = BrandGold,
-                        unselectedContentColor = Color(0xFF2F4F4F).copy(alpha = 0.6f)
-                    )
+            if (!hideBottomBar) {
+                BottomNavigation(
+                    backgroundColor = BrandBackground,
+                    modifier = Modifier.navigationBarsPadding() // Add bottom padding
+                ) {
+                    bottomNavItems.forEach { screen ->
+                        BottomNavigationItem(
+                            icon = { Icon(screen.icon, contentDescription = screen.label) },
+                            label = {
+                                Text(
+                                    text = screen.label,
+                                    fontSize = 10.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
+                            selected = currentRoute == screen.route,
+                            onClick = {
+                                mainTabsNavController.navigate(screen.route) {
+                                    popUpTo("home") { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            },
+                            selectedContentColor = BrandGold,
+                            unselectedContentColor = Color(0xFF2F4F4F).copy(alpha = 0.6f)
+                        )
+                    }
                 }
             }
         }

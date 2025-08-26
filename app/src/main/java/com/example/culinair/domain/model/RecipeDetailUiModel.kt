@@ -1,46 +1,49 @@
 package com.example.culinair.domain.model
 
-import com.example.culinair.data.remote.dto.response.HomeRecipeResponse
+import com.example.culinair.data.remote.dto.response.RecipeResponse
 
 /**
  * Created by John Ralph Dela Rosa on 8/6/2025.
  */
-data class RecipePreviewUiModel(
+data class RecipeDetailUiModel(
     val id: String,
     val title: String,
-    val imageUrl: String? = "",
+    val imageUrl: String,
     val displayName: String,
-    val avatarUrl: String? = "",
-    val likes: Int,
-    val saves: Int,
-    val comments: Int,
+    val avatarUrl: String?,
+    val description: String,
+    val ingredients: List<String>,
+    val steps: List<String>,
     val category: String,
+    val tags: List<String>,
     val cookTimeMinutes: Int,
     val difficulty: String,
-    val isLiked: Boolean = false,
+    val createdAt: String,
     val likesCount: Int,
-    // Check if current user has liked this recipe
-    val isLikedByCurrentUser: Boolean = false,
-    val isSavedByCurrentUser: Boolean = false
-
+    val commentsCount: Int,
+    val savesCount: Int,
+    val isLikedByCurrentUser: Boolean,
+    val isSavedByCurrentUser: Boolean
 )
 
-fun HomeRecipeResponse.toPreviewUi(currentUserId: String): RecipePreviewUiModel {
-    return RecipePreviewUiModel(
+fun RecipeResponse.toPreviewUi(currentUserId: String): RecipeDetailUiModel {
+    return RecipeDetailUiModel(
         id = id,
         title = title,
         imageUrl = imageUrl,
         displayName = userProfile?.displayName ?: "Unknown",
         avatarUrl = userProfile?.avatarUrl,
-        likes = likesCount,
-        saves = savesCount,
-        comments = commentsCount,
+        description = description,
+        ingredients = ingredients,
+        steps = steps,
         category = category,
+        tags = tags,
         cookTimeMinutes = cookTimeMinutes,
         difficulty = difficulty,
-        isLiked = isLiked,
+        createdAt = createdAt,
         likesCount = likesCount,
-        // Check if current user has liked this recipe
+        commentsCount = commentsCount,
+        savesCount = savesCount,
         isLikedByCurrentUser = recipeLikes?.any { it.userId == currentUserId } == true,
         isSavedByCurrentUser = recipeSaves?.any { it.userId == currentUserId } == true
     )

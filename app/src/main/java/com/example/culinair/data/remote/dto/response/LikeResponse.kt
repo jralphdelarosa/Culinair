@@ -7,6 +7,6 @@ import com.google.gson.annotations.SerializedName
  */
 data class LikeResponse(
     val liked: Boolean,
-    @SerializedName("saves_count")
+    @SerializedName("likes_count")
     val likesCount: Int
 )

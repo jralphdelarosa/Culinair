@@ -25,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -42,6 +43,7 @@ import com.example.culinair.presentation.components.CulinairCompactTextField
 import com.example.culinair.presentation.components.CulinairButton
 import com.example.culinair.presentation.dialogs.CircularLogoWithLoadingRing
 import com.example.culinair.presentation.dialogs.ErrorDialog
+import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGreen
 import com.example.culinair.presentation.viewmodel.profile.ProfileViewModel
 
@@ -102,12 +104,16 @@ fun ProfileScreen(
                             tint = BrandGreen
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = BrandBackground   // Optional: Text color
+                )
             )
         }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
+                .background(BrandBackground)
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),

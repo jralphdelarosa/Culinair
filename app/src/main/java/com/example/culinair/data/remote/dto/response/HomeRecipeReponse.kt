@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName
  * Created by John Ralph Dela Rosa on 8/6/2025.
  */
 // API Response Models
-data class HomeRecipeResponse(
+data class RecipeResponse(
     val id: String,
     @SerializedName("user_id")
     val userId: String,

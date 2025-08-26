@@ -1,4 +1,4 @@
-package com.example.culinair.presentation.screens.saved
+package com.example.culinair.presentation.screens.community
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -19,7 +19,7 @@ import com.example.culinair.presentation.theme.BrandBackground
  * Created by John Ralph Dela Rosa on 7/26/2025.
  */
 @Composable
-fun SavedScreen() {
+fun CommunityScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -27,7 +27,7 @@ fun SavedScreen() {
             .padding(24.dp)
     ) {
         Text(
-            text = "Settings",
+            text = "Community",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF2F4F4F) // Dark green-gray
@@ -37,7 +37,7 @@ fun SavedScreen() {
 
         // Example placeholder content
         Text(
-            text = "Settings.",
+            text = "Community",
             color = Color(0xFF2F4F4F),
             fontSize = 16.sp
         )

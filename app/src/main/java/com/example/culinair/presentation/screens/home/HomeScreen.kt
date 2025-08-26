@@ -55,14 +55,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.culinair.domain.model.RecipePreviewUiModel
+import com.example.culinair.domain.model.RecipeDetailUiModel
+import com.example.culinair.presentation.LikeAnimation
+import com.example.culinair.presentation.SaveAnimation
 import com.example.culinair.presentation.theme.AppStandardYellow
 import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGreen
-import com.example.culinair.presentation.viewmodel.home.HomeFilter
-import com.example.culinair.presentation.viewmodel.home.HomeViewModel
+import com.example.culinair.presentation.viewmodel.recipe.HomeFilter
+import com.example.culinair.presentation.viewmodel.recipe.RecipeViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
@@ -70,9 +72,12 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
  * Created by John Ralph Dela Rosa on 7/24/2025.
  */
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
-    val recipes by viewModel.recipes.collectAsState()
-    val selectedFilter by viewModel.selectedFilter.collectAsState()
+fun HomeScreen(
+    navController: NavController,
+    recipeViewModel: RecipeViewModel
+) {
+    val recipes by recipeViewModel.recipes.collectAsState()
+    val selectedFilter by recipeViewModel.selectedFilter.collectAsState()
 
     var isRefreshing by remember { mutableStateOf(false) }
 
@@ -80,7 +85,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         state = rememberSwipeRefreshState(isRefreshing),
         onRefresh = {
             isRefreshing = true
-            viewModel.loadHomeContent()
+            recipeViewModel.loadHomeContent()
             isRefreshing = false
         }
     ) {
@@ -92,16 +97,16 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         ) {
             item { HomeHeader({}, {}) }
             item { Spacer(Modifier.height(12.dp)) }
-            item { FilterChips(selectedFilter, viewModel::selectFilter) }
+            item { FilterChips(selectedFilter, recipeViewModel::selectFilter) }
             item { Spacer(Modifier.height(16.dp)) }
 
             items(recipes.size) { index ->
                 val recipe = recipes[index]
                 RecipeCard(
                     recipe = recipe,
-                    onClick = { /* navigate to details */ },
-                    onLike = { viewModel.likeRecipe(recipe.id) },
-                    onSave = { viewModel.saveRecipe(recipe.id) }
+                    onClick = { navController.navigate("recipe_detail/${recipe.id}") },
+                    onLike = { recipeViewModel.likeRecipe(recipe.id) },
+                    onSave = { recipeViewModel.saveRecipe(recipe.id) }
                 )
                 Spacer(Modifier.height(20.dp))
             }
@@ -182,7 +187,8 @@ fun FilterChips(selected: HomeFilter, onSelected: (HomeFilter) -> Unit) {
                 selected = selected == filter,
                 onClick = { onSelected(filter) },
                 label = {
-                    Text(text = filter.name.replace("_", " ")) },
+                    Text(text = filter.name.replace("_", " "))
+                },
                 modifier = Modifier.padding(end = 8.dp),
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = Color.White, // Unselected background
@@ -197,11 +203,14 @@ fun FilterChips(selected: HomeFilter, onSelected: (HomeFilter) -> Unit) {
 
 @Composable
 fun RecipeCard(
-    recipe: RecipePreviewUiModel,
+    recipe: RecipeDetailUiModel,
     onClick: () -> Unit,
     onLike: () -> Unit,
     onSave: () -> Unit
 ) {
+    var showLikeAnimation by remember { mutableStateOf(false) }
+    var showSaveAnimation by remember { mutableStateOf(false) }
+
     Card(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(8.dp),
@@ -210,9 +219,12 @@ fun RecipeCard(
             .clickable { onClick() }
     ) {
         Column {
-            Box(modifier = Modifier.height(200.dp)) {
+            Box(
+                modifier = Modifier.height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 AsyncImage(
-                    model = recipe.imageUrl?.ifBlank { "https://via.placeholder.com/400x300?text=No+Image" },
+                    model = recipe.imageUrl.ifBlank { "https://via.placeholder.com/400x300?text=No+Image" },
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -221,18 +233,29 @@ fun RecipeCard(
                 )
 
                 IconButton(
-                    onClick = onSave,
+                    onClick = {
+                        if (!recipe.isSavedByCurrentUser) showSaveAnimation = true
+                        onSave()
+                    },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
                         .background(Color.White.copy(alpha = 0.7f), CircleShape)
                 ) {
                     Icon(
-                        imageVector = if(recipe.isSavedByCurrentUser) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                        imageVector = if (recipe.isSavedByCurrentUser) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                         contentDescription = "Like",
                         tint = if (recipe.isSavedByCurrentUser) AppStandardYellow else Color.Gray
                     )
                 }
+                LikeAnimation(
+                    triggerAnimation = showLikeAnimation,
+                    onAnimationEnd = { showLikeAnimation = false }
+                )
+                SaveAnimation(
+                    triggerAnimation = showSaveAnimation,
+                    onAnimationEnd = { showSaveAnimation = false }
+                )
             }
 
             Column(modifier = Modifier.padding(12.dp)) {
@@ -248,7 +271,8 @@ fun RecipeCard(
                             modifier = Modifier
                                 .size(28.dp)
                                 .clip(CircleShape)
-                                .background(Color.Gray)
+                                .background(Color.Gray),
+                            contentScale = ContentScale.Crop
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(recipe.displayName, fontWeight = FontWeight.SemiBold)
@@ -303,14 +327,20 @@ fun RecipeCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onLike, modifier = Modifier.size(24.dp)) {
+                        IconButton(
+                            onClick = {
+                                if (!recipe.isLikedByCurrentUser) showLikeAnimation = true
+                                onLike()
+                            },
+                            modifier = Modifier.size(24.dp)
+                        ) {
                             Icon(
-                                imageVector = if(recipe.isLikedByCurrentUser) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                imageVector = if (recipe.isLikedByCurrentUser) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = "Like",
                                 tint = if (recipe.isLikedByCurrentUser) Color.Red else Color.Gray
-                                )
+                            )
                         }
-                        Text("${recipe.likes}", fontSize = 12.sp)
+                        Text("${recipe.likesCount}", fontSize = 12.sp)
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -320,7 +350,7 @@ fun RecipeCard(
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(Modifier.width(4.dp))
-                        Text("${recipe.comments}", fontSize = 12.sp)
+                        Text("${recipe.commentsCount}", fontSize = 12.sp)
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -330,7 +360,7 @@ fun RecipeCard(
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(Modifier.width(4.dp))
-                        Text("Save", fontSize = 12.sp)
+                        Text("${recipe.savesCount}", fontSize = 12.sp)
                     }
                 }
             }

@@ -1,4 +1,4 @@
-package com.example.culinair.presentation.screens
+package com.example.culinair.presentation.screens.settings
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +11,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,7 +22,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.culinair.presentation.components.CulinairButton
-import com.example.culinair.presentation.dialogs.CircularLogoWithLoadingRing
 import com.example.culinair.presentation.dialogs.LogoutDialog
 import com.example.culinair.presentation.viewmodel.settings.SettingsViewModel
 
