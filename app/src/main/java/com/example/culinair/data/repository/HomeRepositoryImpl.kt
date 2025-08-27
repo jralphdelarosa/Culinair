@@ -3,6 +3,7 @@ package com.example.culinair.data.repository
 import android.util.Log
 import com.example.culinair.data.remote.apiservice.HomeApiService
 import com.example.culinair.data.remote.dto.request.CommentRequest
+import com.example.culinair.data.remote.dto.response.AddCommentResponse
 import com.example.culinair.data.remote.dto.response.CommentResponse
 import com.example.culinair.data.remote.dto.response.LikeResponse
 import com.example.culinair.data.remote.dto.response.SaveResponse
@@ -233,36 +234,27 @@ class HomeRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addComment(
+    override suspend fun addCommentAndUpdateCount(
         token: String,
         recipeId: String,
+        userId: String,
         content: String,
         parentCommentId: String?
-    ): CommentUiModel? {
+    ): AddCommentResponse? {
         return try {
-            val request = CommentRequest(recipeId, content, parentCommentId)
-            val response = service.addComment(
+            val response = service.addCommentAndUpdateCount(
                 token = "Bearer $token",
-                request = request
+                body = mapOf(
+                    "recipe_id" to recipeId,
+                    "user_id" to userId,
+                    "content" to content,
+                    "parent_comment_id" to parentCommentId
+                )
             )
-
-            if (response.isSuccessful) {
-                Log.d(TAG, "Comment added successfully")
-                // Always return null, but don't throw exception
-                // ViewModel will treat null as success and refresh
-                null
-            } else {
-                Log.e(TAG, "addComment failed: ${response.code()} - ${response.message()}")
-                val errorBody = response.errorBody()?.string()
-                Log.e(TAG, "Error body: $errorBody")
-                throw Exception("Server returned error: ${response.code()}")
-            }
-        } catch (e: HttpException) {
-            Log.e(TAG, "addComment HTTP error: ${e.code()}")
-            throw e
+            if (response.isSuccessful) response.body() else null
         } catch (e: Exception) {
-            Log.e(TAG, "addComment exception: ${e.message}", e)
-            throw e
+            Log.e(TAG, "addCommentAndUpdateCount exception: ${e.message}", e)
+            null
         }
     }
 

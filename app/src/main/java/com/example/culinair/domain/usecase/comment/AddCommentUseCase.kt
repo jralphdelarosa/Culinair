@@ -1,5 +1,6 @@
 package com.example.culinair.domain.usecase.comment
 
+import com.example.culinair.data.remote.dto.response.AddCommentResponse
 import com.example.culinair.domain.model.CommentUiModel
 import com.example.culinair.domain.repository.HomeRepository
 import javax.inject.Inject
@@ -10,12 +11,22 @@ import javax.inject.Inject
 class AddCommentUseCase @Inject constructor(
     private val repository: HomeRepository
 ) {
+    /**
+     * Inserts a comment via RPC and returns the new comments_count (and new comment_id).
+     */
     suspend operator fun invoke(
         token: String,
+        userId: String,
         recipeId: String,
         content: String,
         parentCommentId: String? = null
-    ): CommentUiModel? { // Make nullable
-        return repository.addComment(token, recipeId, content, parentCommentId)
+    ): AddCommentResponse? {
+        return repository.addCommentAndUpdateCount(
+            token = token,
+            recipeId = recipeId,
+            userId = userId,
+            content = content,
+            parentCommentId = parentCommentId
+        )
     }
 }

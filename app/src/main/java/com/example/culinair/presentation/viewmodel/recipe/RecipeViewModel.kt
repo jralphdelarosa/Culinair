@@ -195,14 +195,13 @@ class RecipeViewModel @Inject constructor(
 
             try {
                 val token = sessionManager.getAccessToken() ?: return@launch
+                val userId = sessionManager.getUserId() ?: return@launch
 
-                // Call addComment - it returns null on success (empty response)
-                addCommentUseCase(token, recipeId, content, parentCommentId)
+                val result = addCommentUseCase(token, userId, recipeId, content, parentCommentId)
+                result?.let { updateRecipeCommentsCount(recipeId, it.commentsCount) }
 
-                // If we reach here without exception, it was successful
-                // Always refresh the comments list
+                // Refresh comments for accuracy
                 loadComments(recipeId)
-
             } catch (e: Exception) {
                 _commentError.value = "Error posting comment: ${e.message}"
                 Log.e("RecipeViewModel", "Error adding comment", e)
@@ -210,6 +209,16 @@ class RecipeViewModel @Inject constructor(
                 _isAddingComment.value = false
             }
         }
+    }
+
+    private fun updateRecipeCommentsCount(recipeId: String, newCount: Int) {
+        _allPublicRecipes.value = _allPublicRecipes.value.map { if (it.id == recipeId) it.copy(commentsCount = newCount) else it }
+        _followingRecipes.value  = _followingRecipes.value.map { if (it.id == recipeId) it.copy(commentsCount = newCount) else it }
+        _trendingRecipes.value   = _trendingRecipes.value.map { if (it.id == recipeId) it.copy(commentsCount = newCount) else it }
+        _recommendedRecipes.value= _recommendedRecipes.value.map { if (it.id == recipeId) it.copy(commentsCount = newCount) else it }
+
+        // If you keep a derived saved list, recompute to keep it consistent
+        updateSavedRecipes()
     }
 
 

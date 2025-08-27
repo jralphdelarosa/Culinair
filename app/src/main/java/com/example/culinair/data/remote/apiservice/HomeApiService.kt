@@ -1,6 +1,7 @@
 package com.example.culinair.data.remote.apiservice
 
 import com.example.culinair.data.remote.dto.request.CommentRequest
+import com.example.culinair.data.remote.dto.response.AddCommentResponse
 import com.example.culinair.data.remote.dto.response.CommentResponse
 import com.example.culinair.data.remote.dto.response.RecipeResponse
 import com.example.culinair.data.remote.dto.response.LikeResponse
@@ -85,11 +86,11 @@ interface HomeApiService {
         @Query("order") order: String = "created_at.asc"
     ): List<CommentResponse>
 
-    @POST("rest/v1/comments")
-    suspend fun addComment(
+    @POST("rest/v1/rpc/add_comment_and_update_count")
+    suspend fun addCommentAndUpdateCount(
         @Header("Authorization") token: String,
-        @Body request: CommentRequest
-    ): Response<Unit>
+        @Body body: Map<String, String?> // recipe_id, user_id, content, parent_comment_id (optional)
+    ): Response<AddCommentResponse>
 
     companion object {
         const val SELECT_COMMENT_WITH_USER  = "*, user_profiles!left(id, display_name, avatar_url)"

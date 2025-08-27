@@ -1,5 +1,6 @@
 package com.example.culinair.domain.repository
 
+import com.example.culinair.data.remote.dto.response.AddCommentResponse
 import com.example.culinair.data.remote.dto.response.LikeResponse
 import com.example.culinair.data.remote.dto.response.SaveResponse
 import com.example.culinair.domain.model.CommentUiModel
@@ -17,5 +18,5 @@ interface HomeRepository {
     suspend fun likeRecipe(recipeId: String, userId: String, token: String): LikeResponse?
     suspend fun saveRecipe(recipeId: String, userId: String, token: String): SaveResponse?
     suspend fun getComments(recipeId: String, token: String): List<CommentUiModel>
-    suspend fun addComment(token: String, recipeId: String, content: String, parentCommentId: String? = null): CommentUiModel?
+    suspend fun addCommentAndUpdateCount(token: String, recipeId: String, userId: String, content: String, parentCommentId: String?): AddCommentResponse?
 }
