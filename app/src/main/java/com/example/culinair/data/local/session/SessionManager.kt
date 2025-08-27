@@ -20,6 +20,7 @@ class SessionManager @Inject constructor(
 ) {
     companion object {
         val ACCESS_TOKEN = stringPreferencesKey("access_token")
+        val REFRESH_TOKEN = stringPreferencesKey("refresh_token")
         val USER_ID = stringPreferencesKey("user_id")
         val AUTH_METHOD = stringPreferencesKey("auth_method")
     }
@@ -28,14 +29,18 @@ class SessionManager @Inject constructor(
     private var cachedAccessToken: String? = null
 
     @Volatile
+    private var cachedRefreshToken: String? = null
+
+    @Volatile
     private var cachedUserId: String? = null
 
     @Volatile
     private var cachedAuthMethod: AuthMethod? = null
 
-    suspend fun saveUserSession(accessToken: String, userId: String, authMethod: AuthMethod) {
+    suspend fun saveUserSession(accessToken: String, refreshToken: String, userId: String, authMethod: AuthMethod) {
         dataStore.edit { prefs ->
             prefs[ACCESS_TOKEN] = accessToken
+            prefs[REFRESH_TOKEN] = refreshToken
             prefs[USER_ID] = userId
             prefs[AUTH_METHOD] = when (authMethod) {
                 is AuthMethod.EmailPassword -> "EMAIL_PASSWORD"
@@ -43,6 +48,7 @@ class SessionManager @Inject constructor(
             }
         }
         cachedAccessToken = accessToken
+        cachedRefreshToken = refreshToken
         cachedUserId = userId
         cachedAuthMethod = authMethod
     }
@@ -61,6 +67,17 @@ class SessionManager @Inject constructor(
         return cachedUserId
     }
 
+    suspend fun getRefreshToken(): String? {
+        if (cachedRefreshToken == null) {
+            cachedRefreshToken = dataStore.data.first()[REFRESH_TOKEN]
+        }
+        return cachedRefreshToken
+    }
+
+    suspend fun isLoggedIn(): Boolean {
+        return getAccessToken() != null && getRefreshToken() != null
+    }
+
     suspend fun getAuthMethod(): AuthMethod? {
         if (cachedAuthMethod == null) {
             val authMethodString = dataStore.data.first()[AUTH_METHOD]
@@ -76,10 +93,12 @@ class SessionManager @Inject constructor(
     suspend fun clearSession() {
         dataStore.edit { prefs ->
             prefs.remove(ACCESS_TOKEN)
+            prefs.remove(REFRESH_TOKEN)
             prefs.remove(USER_ID)
             prefs.remove(AUTH_METHOD)
         }
         cachedAccessToken = null
+        cachedRefreshToken = null
         cachedUserId = null
         cachedAuthMethod = null
     }

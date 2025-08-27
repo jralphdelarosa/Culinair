@@ -25,6 +25,7 @@ import com.example.culinair.presentation.navost.BottomNavScreen.Companion.bottom
 import com.example.culinair.presentation.navost.MainNavHost
 import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGold
+import com.example.culinair.presentation.theme.BrandGreen
 
 /**
  * Created by John Ralph Dela Rosa on 7/26/2025.
@@ -48,13 +49,14 @@ fun MainScreen(deepLinked: Boolean, culinairNavController: NavController) {
                 ) {
                     bottomNavItems.forEach { screen ->
                         BottomNavigationItem(
-                            icon = { Icon(screen.icon, contentDescription = screen.label) },
+                            icon = { Icon(screen.icon, contentDescription = screen.label, tint = BrandGreen) },
                             label = {
                                 Text(
                                     text = screen.label,
                                     fontSize = 10.sp,
                                     maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis,
+                                    color = BrandGreen
                                 )
                             },
                             selected = currentRoute == screen.route,

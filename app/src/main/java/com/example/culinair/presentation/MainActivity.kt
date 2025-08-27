@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        val viewModel: AuthViewModel = ViewModelProvider(this@MainActivity)[AuthViewModel::class.java]
         val deepLinkData = extractDeepLink(intent)
         // Call ensureProfileExists if this is a confirmation deep link
         if (deepLinkData != null && deepLinkData.fromConfirmation) {
@@ -39,7 +40,7 @@ class MainActivity : AppCompatActivity() {
                     refreshToken = deepLinkData.refreshToken,
                     userId = deepLinkData.userId
                 )
-                val viewModel: AuthViewModel = ViewModelProvider(this@MainActivity)[AuthViewModel::class.java]
+
                 viewModel.saveSession(session)
 
                 // ✅ Then ensure profile
@@ -61,7 +62,7 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             DishlyTheme {
-                CulinairNavHost(deepLinkResult = deepLinkData)
+                CulinairNavHost(authViewModel = viewModel, deepLinkResult = deepLinkData)
             }
         }
     }

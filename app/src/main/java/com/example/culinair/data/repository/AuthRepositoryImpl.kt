@@ -31,6 +31,95 @@ class AuthRepositoryImpl @Inject constructor(
     private val googleSignInClient: GoogleSignInClient
 ) : AuthRepository {
 
+    private suspend fun refreshSession(): Boolean {
+        val refreshToken = sessionManager.getRefreshToken() ?: return false
+
+        return try {
+            val response = service.refreshToken(mapOf("refresh_token" to refreshToken))
+            if (response.isSuccessful) {
+                val authResponse = response.body()
+                if (authResponse?.access_token != null && authResponse.refresh_token != null) {
+                    sessionManager.saveUserSession(
+                        authResponse.access_token,
+                        authResponse.refresh_token,
+                        authResponse.user?.id ?: "",
+                        sessionManager.getAuthMethod() ?: AuthMethod.EmailPassword
+                    )
+                    true
+                } else false
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // Add this method to check and restore session on app start
+    override suspend fun restoreSession(): Result<UserSession?> {
+        return try {
+            if (!sessionManager.isLoggedIn()) {
+                return Result.success(null)
+            }
+
+            val accessToken = sessionManager.getAccessToken()
+            val refreshToken = sessionManager.getRefreshToken()
+            val userId = sessionManager.getUserId()
+            val authMethod = sessionManager.getAuthMethod()
+
+            if (accessToken != null && refreshToken != null && userId != null && authMethod != null) {
+                // Verify the token is still valid by making a test request
+                val isValid = verifyTokenValidity(accessToken)
+
+                if (isValid) {
+                    val session = UserSession(accessToken, refreshToken, authMethod, userId)
+                    Result.success(session)
+                } else {
+                    // Try to refresh the token
+                    val refreshResult = refreshSession()
+                    if (refreshResult) {
+                        // Get the new tokens after refresh
+                        val newAccessToken = sessionManager.getAccessToken()
+                        val newRefreshToken = sessionManager.getRefreshToken()
+                        if (newAccessToken != null && newRefreshToken != null) {
+                            val session = UserSession(newAccessToken, newRefreshToken, authMethod, userId)
+                            Result.success(session)
+                        } else {
+                            // Clear invalid session
+                            sessionManager.clearSession()
+                            Result.success(null)
+                        }
+                    } else {
+                        // Refresh failed, clear session
+                        sessionManager.clearSession()
+                        Result.success(null)
+                    }
+                }
+            } else {
+                Result.success(null)
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Session restoration failed", e)
+            // Clear potentially corrupted session
+            sessionManager.clearSession()
+            Result.success(null)
+        }
+    }
+
+    // Add this helper method to verify token validity
+    private suspend fun verifyTokenValidity(token: String): Boolean {
+        return try {
+            // Make a simple request to verify the token is still valid
+            val response = service.checkProfile(
+                mapOf("limit" to "1"),
+                "Bearer $token"
+            )
+            response.isSuccessful
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     override suspend fun signUp(email: String, password: String): Result<RegisterResult> {
         return try {
             Log.d("AuthRepository", "=== SIGN UP DEBUG ===")
@@ -88,6 +177,7 @@ class AuthRepositoryImpl @Inject constructor(
 
                     sessionManager.saveUserSession(
                         authResponse.access_token,
+                        authResponse.refresh_token,
                         authResponse.user.id,
                         AuthMethod.EmailPassword
                     )
@@ -143,6 +233,7 @@ class AuthRepositoryImpl @Inject constructor(
 
                     sessionManager.saveUserSession(
                         authResponse.access_token,
+                        authResponse.refresh_token,
                         authResponse.user.id,
                         AuthMethod.Google
                     )

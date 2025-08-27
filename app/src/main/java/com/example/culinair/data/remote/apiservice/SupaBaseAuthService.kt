@@ -20,6 +20,9 @@ import retrofit2.http.QueryMap
  */
 interface SupabaseAuthService {
 
+    @POST("auth/v1/token?grant_type=refresh_token")
+    suspend fun refreshToken(@Body request: Map<String, String>): Response<SupabaseAuthResponse>
+
     @POST("auth/v1/signup")
     suspend fun signUp(@Body request: Map<String, String>): Response<ResponseBody>
 

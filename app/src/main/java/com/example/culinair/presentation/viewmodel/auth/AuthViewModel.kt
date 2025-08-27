@@ -11,9 +11,11 @@ import com.example.culinair.data.repository.RegisterResult
 import com.example.culinair.data.remote.dto.response.UserSession
 import com.example.culinair.data.remote.google_sign_in.GoogleSignInManager
 import com.example.culinair.domain.model.GoogleSignInResult
+import com.example.culinair.domain.model.SessionRestorationState
 import com.example.culinair.domain.usecase.auth.GoogleSignInUseCase
 import com.example.culinair.domain.usecase.auth.LoginUseCase
 import com.example.culinair.domain.usecase.auth.RegisterUseCase
+import com.example.culinair.domain.usecase.auth.RestoreSessionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,7 +27,8 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val registerUseCase: RegisterUseCase,
-    private val googleSignInUseCase: GoogleSignInUseCase, // Add this
+    private val googleSignInUseCase: GoogleSignInUseCase,
+    private val restoreSessionUseCase: RestoreSessionUseCase,
     private val googleSignInManager: GoogleSignInManager
 ) : ViewModel() {
 
@@ -46,6 +49,29 @@ class AuthViewModel @Inject constructor(
 
     var googleSignInState by mutableStateOf<Result<UserSession>?>(null)
         private set
+
+    // Add session restoration state
+    var sessionRestorationState by mutableStateOf<SessionRestorationState>(SessionRestorationState.Loading)
+        private set
+
+    // Call this method when the app starts
+    fun restoreSession() {
+        viewModelScope.launch {
+            sessionRestorationState = SessionRestorationState.Loading
+
+            val result = restoreSessionUseCase()
+            result.onSuccess { userSession ->
+                if (userSession != null) {
+                    _session.value = userSession
+                    sessionRestorationState = SessionRestorationState.Success(userSession)
+                } else {
+                    sessionRestorationState = SessionRestorationState.NoSession
+                }
+            }.onFailure { exception ->
+                sessionRestorationState = SessionRestorationState.Error(exception)
+            }
+        }
+    }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
