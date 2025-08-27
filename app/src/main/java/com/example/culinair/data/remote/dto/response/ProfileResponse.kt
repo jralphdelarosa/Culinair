@@ -20,6 +20,9 @@ data class ProfileResponse(
     @SerializedName("avatar_url")
     val avatarUrl: String?,
 
+    @SerializedName("cover_photo_url")
+    val coverPhotoUrl: String?,
+
     @SerializedName("created_at")
     val createdAt: String?,
 

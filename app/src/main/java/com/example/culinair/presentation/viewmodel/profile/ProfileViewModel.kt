@@ -11,6 +11,7 @@ import com.example.culinair.data.remote.dto.response.ProfileResponse
 import com.example.culinair.domain.usecase.profile.GetProfileUseCase
 import com.example.culinair.domain.usecase.profile.UpdateProfileUseCase
 import com.example.culinair.domain.usecase.profile.UploadAvatarUseCase
+import com.example.culinair.domain.usecase.profile.UploadCoverPhotoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,6 +23,7 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val getProfileUseCase: GetProfileUseCase,
     private val uploadAvatarUseCase: UploadAvatarUseCase,
+    private val uploadCoverPhotoUseCase: UploadCoverPhotoUseCase,
     private val updateProfileUseCase: UpdateProfileUseCase
 ) : ViewModel() {
 
@@ -50,6 +52,16 @@ class ProfileViewModel @Inject constructor(
         private set
 
     var uploadError by mutableStateOf<String?>(null)
+        private set
+
+    // Cover photo state - Add these
+    var coverPhotoUrl by mutableStateOf<String?>(null)
+        private set
+
+    var isUploadingCoverPhoto by mutableStateOf(false)
+        private set
+
+    var coverPhotoUploadError by mutableStateOf<String?>(null)
         private set
 
     // Save state
@@ -83,6 +95,7 @@ class ProfileViewModel @Inject constructor(
                 instagram = profileData.instagram ?: ""
                 twitter = profileData.twitter ?: ""
                 avatarUrl = profileData.avatarUrl
+                coverPhotoUrl = profileData.coverPhotoUrl
 
                 Log.d("ProfileViewModel", "Profile loaded: $profileData")
                 Log.d("ProfileViewModel", "Avatar URL: ${profileData.avatarUrl}")
@@ -129,6 +142,7 @@ class ProfileViewModel @Inject constructor(
                             instagram = currentProfile.instagram,
                             twitter = currentProfile.twitter,
                             avatarUrl = url,
+                            coverPhotoUrl = currentProfile.coverPhotoUrl,
                             createdAt = currentProfile.createdAt,
                             updatedAt = currentProfile.updatedAt
                         )
@@ -145,6 +159,55 @@ class ProfileViewModel @Inject constructor(
             isUploading = false
         }
     }
+
+    fun uploadCoverPhoto(uri: Uri) {
+        viewModelScope.launch {
+            isUploadingCoverPhoto = true
+            coverPhotoUploadError = null
+
+            val result = uploadCoverPhotoUseCase(uri)
+
+            result.onSuccess { url ->
+                coverPhotoUrl = url
+
+                val cacheBustedUrl = "$url&ui=${System.currentTimeMillis()}"
+                coverPhotoUrl = cacheBustedUrl
+
+                profile = profile?.copy(coverPhotoUrl = cacheBustedUrl)
+
+                Log.d("ProfileViewModel", "Cover photo updated with cache bust: $cacheBustedUrl")
+
+                profile = profile?.let { currentProfile ->
+                    try {
+                        currentProfile.copy(coverPhotoUrl = url)
+                    } catch (e: Exception) {
+                        Log.e("ProfileViewModel", "Failed to copy profile", e)
+                        ProfileResponse(
+                            id = currentProfile.id,
+                            displayName = currentProfile.displayName,
+                            bio = currentProfile.bio,
+                            website = currentProfile.website,
+                            instagram = currentProfile.instagram,
+                            twitter = currentProfile.twitter,
+                            avatarUrl = currentProfile.avatarUrl,
+                            coverPhotoUrl = url, // Add this
+                            createdAt = currentProfile.createdAt,
+                            updatedAt = currentProfile.updatedAt
+                        )
+                    }
+                }
+
+                Log.d("ProfileViewModel", "Cover photo uploaded successfully: $url")
+
+            }.onFailure { error ->
+                coverPhotoUploadError = error.message
+                Log.e("ProfileViewModel", "Cover photo upload failed", error)
+            }
+
+            isUploadingCoverPhoto = false
+        }
+    }
+
 
     fun saveProfile() {
         viewModelScope.launch {
@@ -176,6 +239,7 @@ class ProfileViewModel @Inject constructor(
 
     fun clearErrors() {
         uploadError = null
+        coverPhotoUploadError = null
         saveError = null
         profileError = null
         saveSuccess = false

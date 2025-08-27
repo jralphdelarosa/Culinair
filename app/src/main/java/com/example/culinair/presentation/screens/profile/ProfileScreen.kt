@@ -1,47 +1,75 @@
 package com.example.culinair.presentation.screens.profile
 
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowOutward
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.culinair.R
+import com.example.culinair.domain.model.SocialLink
+import com.example.culinair.domain.model.SocialPlatform
 import com.example.culinair.presentation.components.CulinairCompactTextField
-import com.example.culinair.presentation.components.CulinairButton
-import com.example.culinair.presentation.dialogs.CircularLogoWithLoadingRing
 import com.example.culinair.presentation.dialogs.ErrorDialog
 import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGreen
@@ -57,32 +85,30 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
     onNavigateToSettings: () -> Unit
 ) {
-    // ViewModel state
     val avatarUrl = viewModel.avatarUrl
+    val coverPhotoUrl = viewModel.coverPhotoUrl
     val isUploading = viewModel.isUploading
+    val isUploadingCoverPhoto = viewModel.isUploadingCoverPhoto
     val uploadError = viewModel.uploadError
+    val coverPhotoUploadError = viewModel.coverPhotoUploadError
     val isLoadingProfile = viewModel.isLoadingProfile
     val isSaving = viewModel.isSaving
-    val saveSuccess = viewModel.saveSuccess
     val saveError = viewModel.saveError
     val profileError = viewModel.profileError
-
     val context = LocalContext.current
 
-    // Show success message
-    LaunchedEffect(saveSuccess) {
-        if (saveSuccess) {
-            Toast.makeText(context, "Profile saved successfully!", Toast.LENGTH_SHORT).show()
-            viewModel.clearErrors()
-        }
-    }
+    var isEditMode by remember { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let {
-            viewModel.uploadAvatar(it)
-        }
+        uri?.let { viewModel.uploadAvatar(it) }
+    }
+
+    val coverPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.uploadCoverPhoto(it) }
     }
 
     Scaffold(
@@ -90,155 +116,239 @@ fun ProfileScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Profile",
-                        fontSize = 24.sp,
+                        "Profile",
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = BrandGreen
                     )
                 },
                 actions = {
+                    if (!isEditMode) {
+                        IconButton(onClick = { isEditMode = true }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = BrandGreen)
+                        }
+                    } else {
+                        IconButton(onClick = { isEditMode = false }) {
+                            Icon(Icons.Default.Close, contentDescription = "Cancel", tint = BrandGreen)
+                        }
+                    }
                     IconButton(onClick = onNavigateToSettings) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = BrandGreen
-                        )
+                        Icon(Icons.Default.Settings, contentDescription = "Settings", tint = BrandGreen)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BrandBackground   // Optional: Text color
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BrandBackground)
             )
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .background(BrandBackground)
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
-        ) {
-            if (isLoadingProfile) {
+        if (isLoadingProfile) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = BrandGreen)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(BrandBackground)
+                    .padding(innerPadding)
+            ) {
+                // Cover photo with name + bio overlay
                 item {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularLogoWithLoadingRing()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Loading profile...",
-                            color = Color(0xFF2F4F4F),
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            } else {
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
                     Box(
                         modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .background(Color.Gray.copy(alpha = 0.2f))
-                            .clickable(enabled = !isUploading) { imagePickerLauncher.launch("image/*") },
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .height(220.dp)
+                            .clickable(enabled = isEditMode) { coverPickerLauncher.launch("image/*") }
                     ) {
-                        when {
-                            isUploading -> CircularLogoWithLoadingRing()
+                        AsyncImage(
+                            model = coverPhotoUrl ?: "https://via.placeholder.com/600x200.png",
+                            contentDescription = "Cover Photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
 
-                            avatarUrl != null -> AsyncImage(
-                                model = avatarUrl,
-                                contentDescription = "Avatar",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
+                        // Gradient for text readability
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.4f))
+                                    )
+                                )
+                        )
 
-                            else -> Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Select Avatar",
-                                modifier = Modifier.size(56.dp),
-                                tint = Color(0xFF2F4F4F)
+                        // Name + Bio overlay
+                        if(!isEditMode) {
+                            Column(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.Bottom
+                            ) {
+                                Text(
+                                    text = viewModel.displayName,
+                                    color = Color.White,
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = viewModel.bio,
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+
+                        if (isEditMode) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = "Change Cover",
+                                tint = Color.White,
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .size(40.dp)
                             )
                         }
                     }
                 }
 
+                // Avatar
                 item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = if (isUploading) "Uploading avatar..." else "Tap your avatar to upload a new profile picture.",
-                        fontSize = 14.sp,
-                        color = Color(0xFF2F4F4F)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .offset(y = (-50).dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(CircleShape)
+                                .background(Color.Gray.copy(alpha = 0.3f))
+                                .border(3.dp, Color.White, CircleShape)
+                                .clickable(enabled = isEditMode && !isUploading) {
+                                    imagePickerLauncher.launch("image/*")
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isUploading) {
+                                CircularProgressIndicator(color = BrandGreen)
+                            } else if (avatarUrl != null) {
+                                AsyncImage(
+                                    model = avatarUrl,
+                                    contentDescription = "Avatar",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(Icons.Default.Person, contentDescription = null, tint = Color.DarkGray)
+                            }
+                            if (isEditMode) {
+                                Icon(
+                                    imageVector = Icons.Default.CameraAlt,
+                                    contentDescription = "Change Cover",
+                                    tint = Color.White,
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .size(40.dp)
+                                )
+                            }
+                        }
+
+
+                    }
                 }
 
-                item { Spacer(modifier = Modifier.height(16.dp)) }
+                // Social links
+                if (!isEditMode) {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp)
+                                .offset(y = (-50).dp)// Remove negative offset
+                        ) {
+                            Text(
+                                "Socials",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = BrandGreen,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            )
 
-                item {
-                    CulinairCompactTextField(
-                        value = viewModel.displayName,
-                        onValueChange = { viewModel.displayName = it },
-                        label = "Display Name"
-                    )
+                            SocialLinks(
+                                instagramUrl = viewModel.instagram.takeIf { it.isNotBlank() },
+                                twitterUrl = viewModel.twitter.takeIf { it.isNotBlank() },
+                                website = viewModel.website.takeIf { it.isNotBlank() }
+                            )
+                        }
+                    }
+                } else {
+                    // Editable Cards
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            elevation = CardDefaults.cardElevation(4.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text("Personal Info", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Spacer(Modifier.height(12.dp))
+                                CulinairCompactTextField(viewModel.displayName, { viewModel.displayName = it }, "Display Name")
+                                Spacer(Modifier.height(8.dp))
+                                CulinairCompactTextField(viewModel.bio, { viewModel.bio = it }, "Bio")
+                            }
+                        }
+                    }
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            elevation = CardDefaults.cardElevation(4.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text("Social Links", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Spacer(Modifier.height(12.dp))
+                                CulinairCompactTextField(viewModel.website, { viewModel.website = it }, "Website")
+                                Spacer(Modifier.height(8.dp))
+                                CulinairCompactTextField(viewModel.instagram, { viewModel.instagram = it }, "Instagram")
+                                Spacer(Modifier.height(8.dp))
+                                CulinairCompactTextField(viewModel.twitter, { viewModel.twitter = it }, "Twitter")
+                            }
+                        }
+                    }
+                    item {
+                        Button(
+                            onClick = {
+                                viewModel.saveProfile()
+                                isEditMode = false
+                            },
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            enabled = !isSaving,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = BrandGreen,
+                                contentColor = Color.White,
+                                disabledContentColor = Color.DarkGray,
+                                disabledContainerColor = Color.Gray
+                            )
+                        ) {
+                            Text(if (isSaving) "Saving..." else "Save")
+                        }
+                    }
                 }
 
-                item { Spacer(modifier = Modifier.height(12.dp)) }
-
-                item {
-                    CulinairCompactTextField(
-                        value = viewModel.bio,
-                        onValueChange = { viewModel.bio = it },
-                        label = "Bio"
-                    )
-                }
-
-                item { Spacer(modifier = Modifier.height(12.dp)) }
-
-                item {
-                    CulinairCompactTextField(
-                        value = viewModel.website,
-                        onValueChange = { viewModel.website = it },
-                        label = "Website"
-                    )
-                }
-
-                item { Spacer(modifier = Modifier.height(12.dp)) }
-
-                item {
-                    CulinairCompactTextField(
-                        value = viewModel.instagram,
-                        onValueChange = { viewModel.instagram = it },
-                        label = "Instagram"
-                    )
-                }
-
-                item { Spacer(modifier = Modifier.height(12.dp)) }
-
-                item {
-                    CulinairCompactTextField(
-                        value = viewModel.twitter,
-                        onValueChange = { viewModel.twitter = it },
-                        label = "Twitter"
-                    )
-                }
-
-                item { Spacer(modifier = Modifier.height(24.dp)) }
-
-                item {
-                    CulinairButton(
-                        text = if (isSaving) "Saving..." else "Save",
-                        onClick = { viewModel.saveProfile() },
-                        enabled = !isSaving && viewModel.hasUnsavedChanges
-                    )
-                }
+                item { Spacer(Modifier.height(48.dp)) }
             }
-
-            // Extra space at bottom
-            item { Spacer(modifier = Modifier.height(48.dp)) }
         }
     }
 
-    // Error Dialogs - NO SPACE TAKEN FROM UI
+    // Error dialogs
     ErrorDialog(
         title = "Profile Load Error",
         message = profileError ?: "",
@@ -246,14 +356,12 @@ fun ProfileScreen(
         onDismiss = { viewModel.clearErrors() },
         onRetry = { viewModel.loadProfile() }
     )
-
     ErrorDialog(
         title = "Avatar Upload Error",
         message = uploadError ?: "",
         isVisible = uploadError != null,
         onDismiss = { viewModel.clearErrors() }
     )
-
     ErrorDialog(
         title = "Save Error",
         message = saveError ?: "",
@@ -261,4 +369,222 @@ fun ProfileScreen(
         onDismiss = { viewModel.clearErrors() },
         onRetry = { viewModel.saveProfile() }
     )
+}
+
+@Composable
+fun SocialLinks(
+    instagramUrl: String? = null,
+    twitterUrl: String? = null,
+    website: String? = null,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val socialLinks = listOfNotNull(
+        instagramUrl?.let { SocialLink("Instagram", it, SocialPlatform.INSTAGRAM) },
+        twitterUrl?.let { SocialLink("Twitter", it, SocialPlatform.TWITTER) },
+        website?.let { SocialLink("Website", it, SocialPlatform.WEBSITE) }
+    )
+
+    if (socialLinks.isEmpty()) {
+        // Empty state
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.Gray.copy(alpha = 0.1f)
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    Icons.Default.Share,
+                    contentDescription = null,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "No social links added yet",
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+    } else {
+        // Social links using regular Column and Row layout
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            when (socialLinks.size) {
+                1 -> {
+                    // Single item - full width
+                    SocialLinkCard(
+                        socialLink = socialLinks[0],
+                        onClick = { openUrl(context, socialLinks[0].url) }
+                    )
+                }
+                2 -> {
+                    // Two items - side by side
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        socialLinks.forEach { socialLink ->
+                            SocialLinkCard(
+                                socialLink = socialLink,
+                                onClick = { openUrl(context, socialLink.url) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+                else -> {
+                    // Three or more items - two per row
+                    socialLinks.chunked(2).forEach { rowItems ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            rowItems.forEach { socialLink ->
+                                SocialLinkCard(
+                                    socialLink = socialLink,
+                                    onClick = { openUrl(context, socialLink.url) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            // Add spacer if odd number of items in last row
+                            if (rowItems.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SocialLinkCard(
+    socialLink: SocialLink,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier
+            .height(72.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = socialLink.platform.backgroundColor
+        ),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Platform icon
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        Color.White.copy(alpha = 0.2f),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                when (socialLink.platform) {
+                    SocialPlatform.INSTAGRAM -> InstagramIcon()
+                    SocialPlatform.TWITTER -> TwitterIcon()
+                    SocialPlatform.WEBSITE -> WebsiteIcon()
+                }
+            }
+
+            // Platform info
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(0.dp)
+            ) {
+                Text(
+                    modifier = Modifier
+                        .padding(0.dp),
+                    text = socialLink.platform.displayName,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp
+                )
+                Text(
+                    modifier = Modifier
+                        .padding(0.dp),
+                    text = socialLink.displayUrl,
+                    color = Color.White.copy(alpha = 0.8f),
+                    fontSize = 8.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // Arrow icon
+            Icon(
+                Icons.Default.ArrowOutward,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.8f),
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+
+// Custom brand icons using vector graphics
+@Composable
+fun InstagramIcon(modifier: Modifier = Modifier) {
+    Icon(
+        painter = painterResource(id = R.drawable.ic_instagram), // You'll need to add this
+        contentDescription = "Instagram",
+        tint = Color.White,
+        modifier = modifier.size(24.dp)
+    )
+}
+
+@Composable
+fun TwitterIcon(modifier: Modifier = Modifier) {
+    Icon(
+        painter = painterResource(id = R.drawable.ic_twitter), // You'll need to add this
+        contentDescription = "Twitter",
+        tint = Color.White,
+        modifier = modifier.size(24.dp)
+    )
+}
+
+@Composable
+fun WebsiteIcon(modifier: Modifier = Modifier) {
+    Icon(
+        Icons.Default.Language,
+        contentDescription = "Website",
+        tint = Color.White,
+        modifier = modifier.size(24.dp)
+    )
+}
+
+fun openUrl(context: Context, url: String) {
+    try {
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        Toast.makeText(context, "Something went wrong." , Toast.LENGTH_LONG ).show()
+    }
 }

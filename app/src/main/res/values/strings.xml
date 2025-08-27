@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Culinair</string>
+    <string name="GENERIC_ERROR_MESSAGE">Culinair</string>
 </resources>

@@ -10,6 +10,8 @@ interface ProfileRepository {
 
     suspend fun uploadAvatarRaw(uri: Uri): Result<String>
 
+    suspend fun uploadCoverPhotoRaw(uri: Uri): Result<String>
+
     suspend fun updateProfileInfo(
         displayName: String,
         bio: String,

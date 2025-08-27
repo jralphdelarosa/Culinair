@@ -12,6 +12,9 @@ data class UpdateProfileRequest(
     @SerializedName("avatar_url")
     val avatarUrl: String? = null,
 
+    @SerializedName("cover_photo_url")
+    val coverPhotoUrl: String? = null,
+
     val bio: String? = null,
     val website: String? = null,
     val instagram: String? = null,

@@ -12,9 +12,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.util.UUID
 import javax.inject.Inject
 
 /**
@@ -27,10 +25,12 @@ class ProfileRepositoryImpl @Inject constructor(
 ) : ProfileRepository {
 
     companion object {
-        private const val TAG = "RecipeRepositoryImpl"
+        private const val TAG = "ProfileRepository" +
+                ""
     }
 
-    private val baseStorageUrl = "https://voygyldtkkbwdljnfwfg.supabase.co/storage/v1/object/public/avatars/"
+    private val avatarBaseStorageUrl = "https://voygyldtkkbwdljnfwfg.supabase.co/storage/v1/object/public/avatars/"
+    private val coverPhotoBaseStorageUrl = "https://voygyldtkkbwdljnfwfg.supabase.co/storage/v1/object/public/cover-photo/"
 
     override suspend fun uploadAvatarRaw(uri: Uri): Result<String> = withContext(Dispatchers.IO) {
         try {
@@ -88,7 +88,7 @@ class ProfileRepositoryImpl @Inject constructor(
             }
 
             val timestamp = System.currentTimeMillis()
-            val avatarUrl = "$baseStorageUrl$userId/$fileName?v=$timestamp"
+            val avatarUrl = "$avatarBaseStorageUrl$userId/$fileName?v=$timestamp"
 
             Log.d(TAG, "✅ Upload successful - Avatar URL: $avatarUrl")
 
@@ -123,6 +123,101 @@ class ProfileRepositoryImpl @Inject constructor(
             Result.success(avatarUrl)
         } catch (e: Exception) {
             Log.e(TAG, "❌ Avatar upload exception", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun uploadCoverPhotoRaw(uri: Uri): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "=== UPLOAD COVER PHOTO DEBUG ===")
+            Log.d(TAG, "URI: $uri")
+
+            val userId = sessionManager.getUserId() ?: return@withContext Result.failure(Exception("Not authenticated"))
+            val token = sessionManager.getAccessToken() ?: return@withContext Result.failure(Exception("No access token"))
+
+            Log.d(TAG, "User ID: $userId")
+            Log.d(TAG, "Token present: ${token.isNotBlank()}")
+
+            val fileName = "cover.jpg"
+
+            Log.d(TAG, "Generated filename: $fileName")
+
+            val inputStream = context.contentResolver.openInputStream(uri)
+                ?: return@withContext Result.failure(Exception("Failed to read image"))
+
+            val bytes = inputStream.readBytes()
+            Log.d(TAG, "Image size: ${bytes.size} bytes (${bytes.size / 1024}KB)")
+
+            if (bytes.size > 10 * 1024 * 1024) { // Allow larger size for cover photos
+                Log.e(TAG, "❌ Image too large: ${bytes.size} bytes > 10MB")
+                return@withContext Result.failure(Exception("Image too large. Max size is 10MB."))
+            }
+
+            val requestFile = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
+
+            Log.d(TAG, "User ID path: $userId")
+            Log.d(TAG, "Filename path: $fileName")
+            Log.d(TAG, "Full expected path: cover-photo/$userId/$fileName")
+
+            val response = profileApiService.uploadCoverPhotoRaw(
+                userId = userId,
+                fileName = fileName,
+                auth = "Bearer $token",
+                image = requestFile
+            )
+
+            Log.d(TAG, "=== UPLOAD RESPONSE ===")
+            Log.d(TAG, "Status: ${response.code()}")
+            Log.d(TAG, "Headers:")
+            response.headers().forEach { header ->
+                Log.d(TAG, "  ${header.first}: ${header.second}")
+            }
+
+            val uploadResponseBody = response.body()?.string()
+            Log.d(TAG, "Response body: $uploadResponseBody")
+
+            if (!response.isSuccessful) {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "❌ Cover photo upload failed - Status: ${response.code()}, Error: $errorBody")
+                return@withContext Result.failure(Exception("Cover photo upload failed: ${response.code()} - $errorBody"))
+            }
+
+            val timestamp = System.currentTimeMillis()
+            val coverPhotoUrl = "$coverPhotoBaseStorageUrl$userId/$fileName?v=$timestamp"
+
+            Log.d(TAG, "✅ Upload successful - Cover Photo URL: $coverPhotoUrl")
+
+            Log.d(TAG, "=== UPDATING PROFILE WITH COVER PHOTO URL ===")
+
+            // Update profile with new cover photo URL
+            val updateResponse = profileApiService.updateProfile(
+                id = "eq.$userId",
+                auth = "Bearer $token",
+                updateRequest = UpdateProfileRequest(
+                    coverPhotoUrl = coverPhotoUrl
+                )
+            )
+
+            Log.d(TAG, "=== PROFILE UPDATE RESPONSE ===")
+            Log.d(TAG, "Status: ${updateResponse.code()}")
+            Log.d(TAG, "Headers:")
+            updateResponse.headers().forEach { header ->
+                Log.d(TAG, "  ${header.first}: ${header.second}")
+            }
+
+            val updateResponseBody = updateResponse.body()?.toString()
+            Log.d(TAG, "Update response body: $updateResponseBody")
+
+            if (!updateResponse.isSuccessful) {
+                val errorBody = updateResponse.errorBody()?.string()
+                Log.e(TAG, "❌ Cover photo URL update failed - Status: ${updateResponse.code()}, Error: $errorBody")
+                return@withContext Result.failure(Exception("Cover photo URL update failed: ${updateResponse.code()} - $errorBody"))
+            }
+
+            Log.d(TAG, "✅ Cover photo upload and profile update successful!")
+            Result.success(coverPhotoUrl)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Cover photo upload exception", e)
             Result.failure(e)
         }
     }
@@ -220,6 +315,7 @@ class ProfileRepositoryImpl @Inject constructor(
                     Log.d(TAG, "Display Name: '${profile.displayName}'")
                     Log.d(TAG, "Bio: '${profile.bio}'")
                     Log.d(TAG, "Avatar URL: '${profile.avatarUrl}'")
+                    Log.d(TAG, "Cover Photo URL: '${profile.coverPhotoUrl}'")
                     Log.d(TAG, "Website: '${profile.website}'")
                     Log.d(TAG, "Instagram: '${profile.instagram}'")
                     Log.d(TAG, "Twitter: '${profile.twitter}'")

@@ -42,4 +42,14 @@ interface ProfileApiService {
         @Header("x-upsert") upsert: String = "true",
         @Body image: RequestBody
     ): Response<ResponseBody>
+
+    @POST("storage/v1/object/cover-photo/{userId}/{fileName}")
+    suspend fun uploadCoverPhotoRaw(
+        @Path("userId") userId: String,
+        @Path("fileName") fileName: String,
+        @Header("Authorization") auth: String,
+        @Header("Content-Type") contentType: String = "image/jpeg",
+        @Header("x-upsert") upsert: String = "true",
+        @Body image: RequestBody
+    ): Response<ResponseBody>
 }
