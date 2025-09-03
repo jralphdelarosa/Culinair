@@ -6,9 +6,11 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +26,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -67,17 +72,24 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -96,6 +108,8 @@ import com.example.culinair.presentation.theme.BrandGold
 import com.example.culinair.presentation.theme.BrandGreen
 import com.example.culinair.presentation.viewmodel.profile.ProfileViewModel
 import com.example.culinair.presentation.viewmodel.recipe.RecipeViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * Created by John Ralph Dela Rosa on 8/22/2025.
@@ -119,6 +133,13 @@ fun RecipeDetailScreen(
     var showSaveAnimation by remember { mutableStateOf(false) }
 
     var showProfileDialog by remember { mutableStateOf(false) }
+
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    var scrollToComments by remember { mutableStateOf(false) }
 
     val sampleTags = listOf(
         "Easy",
@@ -373,8 +394,8 @@ fun RecipeDetailScreen(
                 ) {
                     StatChip(icon = Icons.Default.Schedule, text = "${recipe.cookTimeMinutes} min")
                     StatChip(icon = Icons.Default.Whatshot, text = recipe.difficulty)
+                    StatChip(icon = Icons.Default.Bookmark, text = "${recipe.savesCount}")
                     StatChip(icon = Icons.Default.Favorite, text = "${recipe.likesCount}")
-                    StatChip(icon = Icons.Default.Comment, text = "${recipe.commentsCount}")
                 }
             }
 
@@ -428,11 +449,25 @@ fun RecipeDetailScreen(
                     isAddingComment = recipeViewModel.isAddingComment.collectAsState().value,
                     commentError = recipeViewModel.commentError.collectAsState().value,
                     onClearError = { recipeViewModel.clearCommentError() },
-                    currentUserAvatar = currentUserAvatar
+                    currentUserAvatar = currentUserAvatar,
+                    onReplyTriggered = {
+                        scrollToComments = true
+                    }
                 )
             }
         }
+    }
 
+    // Auto scroll when reply clicked
+    LaunchedEffect(scrollToComments) {
+        if (scrollToComments) {
+            coroutineScope.launch {
+                val index = listState.layoutInfo.visibleItemsInfo
+                    .firstOrNull { it.key == "comments_section" }?.index ?: return@launch
+                listState.animateScrollToItem(index)
+            }
+            scrollToComments = false
+        }
     }
 }
 
@@ -450,6 +485,7 @@ fun StatChip(icon: ImageVector, text: String) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CommentsSection(
     comments: List<CommentUiModel>,
@@ -457,18 +493,37 @@ fun CommentsSection(
     isAddingComment: Boolean = false,
     commentError: String? = null,
     onClearError: () -> Unit = {},
-    currentUserAvatar: String? = null
+    currentUserAvatar: String? = null,
+    onReplyTriggered: () -> Unit
 ) {
     var newComment by remember { mutableStateOf("") }
     var replyToCommentId by remember { mutableStateOf<String?>(null) }
     var replyToDisplayName by remember { mutableStateOf<String?>(null) }
 
-    Column(modifier = Modifier.padding(16.dp)) {
+    // --- New: requesters & focus/keyboard handles ---
+    val headerBringIntoView = remember { BringIntoViewRequester() }
+    val inputBringIntoView = remember { BringIntoViewRequester() }
+    val focusRequester = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+    var focusTick by remember { mutableIntStateOf(0) }
+
+    Column(
+        modifier = Modifier.padding(16.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus(force = true)
+                    keyboard?.hide()
+                })
+            }
+    ) {
         Text(
             text = "Comments (${comments.size})",
             style = MaterialTheme.typography.titleMedium,
             color = BrandGreen,
             fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .bringIntoViewRequester(headerBringIntoView)
         )
         Spacer(Modifier.height(16.dp))
 
@@ -530,7 +585,9 @@ fun CommentsSection(
                 newComment = ""
             },
             userAvatarUrl = currentUserAvatar,
-            placeholder = if (replyToCommentId != null) "Write a reply..." else "Share your thoughts..."
+            placeholder = if (replyToCommentId != null) "Write a reply..." else "Share your thoughts...",
+            focusRequester = focusRequester,
+            inputBringIntoViewRequester = inputBringIntoView
         )
 
         Spacer(Modifier.height(20.dp))
@@ -575,9 +632,26 @@ fun CommentsSection(
                     onReplyClick = { commentId ->
                         replyToCommentId = commentId
                         replyToDisplayName = findCommentById(comments, commentId)?.displayName
+
+                        focusTick++
                     }
                 )
             }
+        }
+    }
+    // --- Run every time `focusTick` changes ---
+    LaunchedEffect(focusTick) {
+        if (focusTick > 0) {
+            // 1) Bring the header into view (so the user sees "Comments (n)")
+            headerBringIntoView.bringIntoView()
+
+            // tiny gap to let LazyColumn settle
+            delay(60)
+
+            // 2) Bring input into view, focus, and show keyboard
+            inputBringIntoView.bringIntoView()
+            focusRequester.requestFocus()
+            keyboard?.show()
         }
     }
 }
@@ -715,6 +789,7 @@ fun CommentItem(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EnhancedCommentInput(
     value: String,
@@ -726,7 +801,9 @@ fun EnhancedCommentInput(
     onCancelReply: () -> Unit = {},
     userAvatarUrl: String? = null,
     placeholder: String = "Write a comment...",
-    maxLength: Int = 500
+    maxLength: Int = 500,
+    focusRequester: FocusRequester,
+    inputBringIntoViewRequester: BringIntoViewRequester
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val isOverLimit = value.length > maxLength
@@ -817,6 +894,8 @@ fun EnhancedCommentInput(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                        .bringIntoViewRequester(inputBringIntoViewRequester)
                         .onFocusChanged { isFocused = it.isFocused },
                     shape = RoundedCornerShape(20.dp),
                     minLines = if (isFocused || value.isNotEmpty()) 3 else 1,

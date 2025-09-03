@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.culinair.data.local.session.SessionManager
 import com.example.culinair.data.remote.dto.response.ProfileResponse
 import com.example.culinair.domain.model.UserStats
 import com.example.culinair.domain.usecase.profile.GetProfileByIdUseCase
@@ -13,6 +14,9 @@ import com.example.culinair.domain.usecase.profile.GetUserStatsUseCase
 import com.example.culinair.domain.usecase.profile.ToggleFollowUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,7 +27,8 @@ import javax.inject.Inject
 class OtherProfileViewModel @Inject constructor(
     private val getProfileByIdUseCase: GetProfileByIdUseCase,
     private val getUserStatsUseCase: GetUserStatsUseCase,
-    private val toggleFollowUserUseCase: ToggleFollowUserUseCase
+    private val toggleFollowUserUseCase: ToggleFollowUserUseCase,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     companion object {
@@ -50,6 +55,10 @@ class OtherProfileViewModel @Inject constructor(
     // Follow action state
     var isFollowActionInProgress by mutableStateOf(false)
         private set
+
+    // For checking current user
+    private val _isCurrentUser = MutableStateFlow(false)
+    val isCurrentUser: StateFlow<Boolean> = _isCurrentUser.asStateFlow()
 
     // Form state
     var displayName by mutableStateOf("")
@@ -127,6 +136,23 @@ class OtherProfileViewModel @Inject constructor(
         }
     }
 
+    fun checkIfCurrentUser(profileUserId: String) {
+        Log.d(TAG, "checkIfCurrentUser called with profileUserId: $profileUserId")
+
+        viewModelScope.launch {
+            Log.d(TAG, "Getting current user ID from session manager")
+            val currentUserId = sessionManager.getUserId()
+
+            Log.d(TAG, "Current user ID: $currentUserId")
+            Log.d(TAG, "Profile user ID: $profileUserId")
+
+            val isCurrentUser = currentUserId == profileUserId
+            Log.d(TAG, "Is current user: $isCurrentUser")
+
+            _isCurrentUser.value = isCurrentUser
+            Log.d(TAG, "Updated isCurrentUser state to: $isCurrentUser")
+        }
+    }
     fun toggleFollow(userId: String) {
         Log.d(TAG, "🔄 Starting follow toggle for userId: $userId")
         Log.d(TAG, "Current follow status: ${userStats.isFollowing}")

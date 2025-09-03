@@ -1,5 +1,6 @@
 package com.example.culinair.presentation.screens.other_profile
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -73,7 +74,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.culinair.data.local.session.SessionManager
 import com.example.culinair.data.remote.dto.response.ProfileResponse
 import com.example.culinair.domain.model.RecipeDetailUiModel
 import com.example.culinair.domain.model.UserStats
@@ -99,8 +102,11 @@ fun OtherProfileScreen(
 ) {
     val context = LocalContext.current
 
+    val isCurrentUser by viewModel.isCurrentUser.collectAsState()
+
     LaunchedEffect(userId) {
         viewModel.loadProfileById(userId)
+        viewModel.checkIfCurrentUser(userId)
     }
 
     Scaffold(
@@ -168,7 +174,8 @@ fun OtherProfileScreen(
                     onFollowToggle = { viewModel.toggleFollow(userId) },
                     recipeViewModel = recipeViewModel,
                     onRecipeClick = onRecipeClick,
-                    modifier = Modifier.padding(innerPadding)
+                    modifier = Modifier.padding(innerPadding),
+                    isCurrentUser = isCurrentUser
                 )
             }
         }
@@ -183,8 +190,10 @@ private fun ProfileContent(
     onFollowToggle: () -> Unit,
     recipeViewModel: RecipeViewModel, // Add this parameter
     onRecipeClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isCurrentUser: Boolean
 ) {
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -273,18 +282,20 @@ private fun ProfileContent(
         }
 
         // Follow Button
-        item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .offset(y = (-60).dp),
-                contentAlignment = Alignment.Center
-            ) {
-                FollowButton(
-                    isFollowing = userStats.isFollowing,
-                    isLoading = isFollowActionInProgress,
-                    onClick = onFollowToggle
-                )
+        if (!isCurrentUser) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .offset(y = (-60).dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    FollowButton(
+                        isFollowing = userStats.isFollowing,
+                        isLoading = isFollowActionInProgress,
+                        onClick = onFollowToggle
+                    )
+                }
             }
         }
 
