@@ -29,23 +29,21 @@ interface SupabaseAuthService {
     @POST("auth/v1/token?grant_type=password")
     suspend fun signIn(@Body request: Map<String, String>): Response<SupabaseAuthResponse>
 
-    // Add Google Sign-In endpoint
     @POST("auth/v1/token?grant_type=id_token")
     suspend fun signInWithGoogle(@Body request: Map<String, String>): Response<SupabaseGoogleAuthResponse>
 
-    // Sign out endpoint - works for both email and Google auth
+    // Keep the auth header for sign out since it's an auth endpoint
     @POST("auth/v1/logout")
     suspend fun signOut(@Header("Authorization") authHeader: String): Response<ResponseBody>
 
+    // Remove @Header annotations - interceptor will handle them
     @GET("rest/v1/user_profiles")
     suspend fun checkProfile(
-        @QueryMap filters: Map<String, String>,
-        @Header("Authorization") authHeader: String
+        @QueryMap filters: Map<String, String>
     ): Response<List<ProfileResponse>>
 
     @POST("rest/v1/user_profiles")
     suspend fun createProfile(
-        @Header("Authorization") authorization: String,
         @Body profile: JsonObject
     ): Response<Unit>
 }

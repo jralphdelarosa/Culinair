@@ -89,7 +89,7 @@ interface HomeApiService {
     @POST("rest/v1/rpc/add_comment_and_update_count")
     suspend fun addCommentAndUpdateCount(
         @Header("Authorization") token: String,
-        @Body body: Map<String, String?> // recipe_id, user_id, content, parent_comment_id (optional)
+        @Body body: Map<String, String?> // recipe_id, user_id, content, parent_comment_id
     ): Response<AddCommentResponse>
 
     companion object {

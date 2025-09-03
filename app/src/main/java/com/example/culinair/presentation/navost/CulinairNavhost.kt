@@ -7,17 +7,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.culinair.data.remote.interceptors.SessionExpiryEntryPoint
 import com.example.culinair.domain.model.SessionRestorationState
 import com.example.culinair.presentation.DeepLinkResult
-import com.example.culinair.presentation.dialogs.CircularLogoWithLoadingRing
+import com.example.culinair.presentation.components.CircularLogoWithLoadingRing
 import com.example.culinair.presentation.screens.auth.LoginScreen
 import com.example.culinair.presentation.screens.auth.RegisterScreen
 import com.example.culinair.presentation.screens.main.MainScreen
 import com.example.culinair.presentation.viewmodel.auth.AuthViewModel
+import dagger.hilt.android.EntryPointAccessors
 
 /**
  * Created by John Ralph Dela Rosa on 7/22/2025.
@@ -28,6 +31,20 @@ fun CulinairNavHost(
     authViewModel: AuthViewModel,
     deepLinkResult: DeepLinkResult? = null
 ) {
+    val context = LocalContext.current
+    val sessionExpiryHandler = EntryPointAccessors.fromApplication(
+        context.applicationContext,
+        SessionExpiryEntryPoint::class.java
+    ).sessionExpiryHandler()
+
+    LaunchedEffect(Unit) {
+        sessionExpiryHandler.sessionExpired.collect {
+            // Session expired, navigate back to login
+            navController.navigate("login") {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         if (deepLinkResult == null) { // Only restore if not handling deep link
@@ -46,26 +63,24 @@ fun CulinairNavHost(
     LaunchedEffect(authViewModel.sessionRestorationState) {
         when (val state = authViewModel.sessionRestorationState) {
             is SessionRestorationState.Success -> {
-                // User has valid session, navigate to main
-                if (deepLinkResult == null) { // Don't interfere with deep link navigation
+                if (deepLinkResult == null) {
                     navController.navigate("main") {
                         popUpTo("login") { inclusive = true }
                     }
                 }
             }
             is SessionRestorationState.NoSession -> {
-                // No session or invalid session, stay on login
-                // Navigation will naturally show login screen
+                // Stay on login screen
             }
             is SessionRestorationState.Error -> {
                 Log.e("Navigation", "Session restoration failed", state.exception)
-                // Stay on login screen
             }
             SessionRestorationState.Loading -> {
-                // Show loading state if needed
+                // Show loading
             }
         }
     }
+
 
     when (authViewModel.sessionRestorationState) {
         SessionRestorationState.Loading -> {

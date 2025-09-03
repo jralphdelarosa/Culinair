@@ -13,5 +13,7 @@ val Pink40 = Color(0xFF7D5260)
 val BrandGold = Color(0xFFC89B3C)
 val BrandGreen = Color(0xFF2F4F4F)
 val BrandBackground = Color(0xFFFAF6EE)
+val BrandRed = Color(0xFFB85450)
+val BrandBlue = Color(0xFF4A6FA5)
 
 val AppStandardYellow = Color(0xFFFFD700)

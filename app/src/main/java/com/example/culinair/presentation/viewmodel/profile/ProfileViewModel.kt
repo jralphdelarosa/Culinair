@@ -8,7 +8,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.culinair.data.remote.dto.response.ProfileResponse
+import com.example.culinair.domain.model.UserStats
+import com.example.culinair.domain.usecase.auth.RestoreSessionUseCase
 import com.example.culinair.domain.usecase.profile.GetProfileUseCase
+import com.example.culinair.domain.usecase.profile.GetUserStatsUseCase
 import com.example.culinair.domain.usecase.profile.UpdateProfileUseCase
 import com.example.culinair.domain.usecase.profile.UploadAvatarUseCase
 import com.example.culinair.domain.usecase.profile.UploadCoverPhotoUseCase
@@ -22,10 +25,16 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val getProfileUseCase: GetProfileUseCase,
+    private val getUserStatsUseCase: GetUserStatsUseCase,
     private val uploadAvatarUseCase: UploadAvatarUseCase,
     private val uploadCoverPhotoUseCase: UploadCoverPhotoUseCase,
-    private val updateProfileUseCase: UpdateProfileUseCase
+    private val updateProfileUseCase: UpdateProfileUseCase,
+    private val restoreSessionUseCase: RestoreSessionUseCase
 ) : ViewModel() {
+
+    companion object{
+        private const val TAG = "ProfileViewModel"
+    }
 
     // Profile data state
     var profile by mutableStateOf<ProfileResponse?>(null)
@@ -54,7 +63,7 @@ class ProfileViewModel @Inject constructor(
     var uploadError by mutableStateOf<String?>(null)
         private set
 
-    // Cover photo state - Add these
+    // Cover photo state
     var coverPhotoUrl by mutableStateOf<String?>(null)
         private set
 
@@ -62,6 +71,13 @@ class ProfileViewModel @Inject constructor(
         private set
 
     var coverPhotoUploadError by mutableStateOf<String?>(null)
+        private set
+
+    // User stats
+    var userStats by mutableStateOf(UserStats())
+        private set
+
+    var isLoadingStats by mutableStateOf(false)
         private set
 
     // Save state
@@ -83,6 +99,8 @@ class ProfileViewModel @Inject constructor(
             isLoadingProfile = true
             profileError = null
 
+            restoreSessionUseCase()
+
             val result = getProfileUseCase()
 
             result.onSuccess { profileData ->
@@ -97,13 +115,27 @@ class ProfileViewModel @Inject constructor(
                 avatarUrl = profileData.avatarUrl
                 coverPhotoUrl = profileData.coverPhotoUrl
 
-                Log.d("ProfileViewModel", "Profile loaded: $profileData")
-                Log.d("ProfileViewModel", "Avatar URL: ${profileData.avatarUrl}")
-                Log.d("ProfileViewModel", "Display Name: ${profileData.displayName}")
+                Log.d(TAG, "Profile loaded: $profileData")
+                Log.d(TAG, "Avatar URL: ${profileData.avatarUrl}")
+                Log.d(TAG, "Display Name: ${profileData.displayName}")
+
+                val statsResult = getUserStatsUseCase(profile?.id ?: "")
+
+                statsResult.onSuccess { stats ->
+                    userStats = stats
+                    Log.d(TAG, "✅ Stats loaded successfully:")
+                    Log.d(TAG, "   - Followers: ${stats.followersCount}")
+                    Log.d(TAG, "   - Following: ${stats.followingCount}")
+                    Log.d(TAG, "   - Is Following: ${stats.isFollowing}")
+                }.onFailure { error ->
+                    Log.e(TAG, "❌ Failed to load stats for userId: ${profile?.id ?: ""}", error)
+                    Log.e(TAG, "Stats error message: ${error.message}")
+                    // Don't show error for stats, just log it
+                }
 
             }.onFailure { error ->
                 profileError = error.message
-                Log.e("ProfileViewModel", "Failed to load profile", error)
+                Log.e(TAG, "Failed to load profile", error)
             }
 
             isLoadingProfile = false
@@ -125,14 +157,14 @@ class ProfileViewModel @Inject constructor(
 
                 profile = profile?.copy(avatarUrl = cacheBustedUrl)
 
-                Log.d("ProfileViewModel", "Avatar updated with cache bust: $cacheBustedUrl")
-                
+                Log.d(TAG, "Avatar updated with cache bust: $cacheBustedUrl")
+
                 // FIXED: Safe copy with null checks
                 profile = profile?.let { currentProfile ->
                     try {
                         currentProfile.copy(avatarUrl = url)
                     } catch (e: Exception) {
-                        Log.e("ProfileViewModel", "Failed to copy profile", e)
+                        Log.e(TAG, "Failed to copy profile", e)
                         // Create new profile object safely
                         ProfileResponse(
                             id = currentProfile.id,
@@ -149,11 +181,11 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
 
-                Log.d("ProfileViewModel", "Avatar uploaded successfully: $url")
+                Log.d(TAG, "Avatar uploaded successfully: $url")
 
             }.onFailure { error ->
                 uploadError = error.message
-                Log.e("ProfileViewModel", "Avatar upload failed", error)
+                Log.e(TAG, "Avatar upload failed", error)
             }
 
             isUploading = false
@@ -175,13 +207,13 @@ class ProfileViewModel @Inject constructor(
 
                 profile = profile?.copy(coverPhotoUrl = cacheBustedUrl)
 
-                Log.d("ProfileViewModel", "Cover photo updated with cache bust: $cacheBustedUrl")
+                Log.d(TAG, "Cover photo updated with cache bust: $cacheBustedUrl")
 
                 profile = profile?.let { currentProfile ->
                     try {
                         currentProfile.copy(coverPhotoUrl = url)
                     } catch (e: Exception) {
-                        Log.e("ProfileViewModel", "Failed to copy profile", e)
+                        Log.e(TAG, "Failed to copy profile", e)
                         ProfileResponse(
                             id = currentProfile.id,
                             displayName = currentProfile.displayName,
@@ -190,18 +222,18 @@ class ProfileViewModel @Inject constructor(
                             instagram = currentProfile.instagram,
                             twitter = currentProfile.twitter,
                             avatarUrl = currentProfile.avatarUrl,
-                            coverPhotoUrl = url, // Add this
+                            coverPhotoUrl = url,
                             createdAt = currentProfile.createdAt,
                             updatedAt = currentProfile.updatedAt
                         )
                     }
                 }
 
-                Log.d("ProfileViewModel", "Cover photo uploaded successfully: $url")
+                Log.d(TAG, "Cover photo uploaded successfully: $url")
 
             }.onFailure { error ->
                 coverPhotoUploadError = error.message
-                Log.e("ProfileViewModel", "Cover photo upload failed", error)
+                Log.e(TAG, "Cover photo upload failed", error)
             }
 
             isUploadingCoverPhoto = false
@@ -227,10 +259,10 @@ class ProfileViewModel @Inject constructor(
                 saveSuccess = true
                 // Reload profile to get updated data
                 loadProfile()
-                Log.d("ProfileViewModel", "Profile saved successfully")
+                Log.d(TAG, "Profile saved successfully")
             }.onFailure { error ->
                 saveError = error.message
-                Log.e("ProfileViewModel", "Profile save failed", error)
+                Log.e(TAG, "Profile save failed", error)
             }
 
             isSaving = false

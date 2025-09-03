@@ -10,7 +10,7 @@ import javax.inject.Inject
 class SaveRecipeUseCase @Inject constructor(
     private val repository: HomeRepository
 ) {
-    suspend operator fun invoke(recipeId: String, userId: String, token: String): SaveResponse? {
-        return repository.saveRecipe(recipeId, userId, token)
+    suspend operator fun invoke(recipeId: String, userId: String, token: String, recipeOwner: String): SaveResponse? {
+        return repository.saveRecipe(recipeId, userId, token, recipeOwner)
     }
 }

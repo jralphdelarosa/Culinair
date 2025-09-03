@@ -11,7 +11,7 @@ import javax.inject.Inject
 class LikeRecipeUseCase @Inject constructor(
     private val repository: HomeRepository
 ) {
-    suspend operator fun invoke(recipeId: String, userId: String, token: String): LikeResponse? {
-        return repository.likeRecipe(recipeId, userId, token)
+    suspend operator fun invoke(recipeId: String, userId: String, token: String, recipeOwner: String): LikeResponse? {
+        return repository.likeRecipe(recipeId, userId, token, recipeOwner)
     }
 }

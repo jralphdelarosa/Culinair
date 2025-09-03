@@ -39,7 +39,7 @@ import com.example.culinair.R
 import com.example.culinair.data.repository.RegisterResult
 import com.example.culinair.presentation.components.CulinairButton
 import com.example.culinair.presentation.components.CulinairTextField
-import com.example.culinair.presentation.dialogs.CircularLogoWithLoadingRing
+import com.example.culinair.presentation.components.CircularLogoWithLoadingRing
 import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGold
 import com.example.culinair.presentation.viewmodel.auth.AuthViewModel

@@ -7,6 +7,7 @@ import com.example.culinair.data.local.session.SessionManager
 import com.example.culinair.data.remote.apiservice.ProfileApiService
 import com.example.culinair.data.remote.dto.request.UpdateProfileRequest
 import com.example.culinair.data.remote.dto.response.ProfileResponse
+import com.example.culinair.domain.model.UserStats
 import com.example.culinair.domain.repository.ProfileRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -338,6 +339,243 @@ class ProfileRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "❌ Get profile exception", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getProfileById(userId: String): Result<ProfileResponse> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "=== GET PROFILE BY ID DEBUG ===")
+
+            val token = sessionManager.getAccessToken() ?: return@withContext Result.failure(Exception("No access token"))
+
+            Log.d(TAG, "Target User ID: $userId")
+            Log.d(TAG, "Token present: ${token.isNotBlank()}")
+            Log.d(TAG, "Query filter: eq.$userId")
+
+            val response = profileApiService.getProfile("eq.$userId", "Bearer $token")
+
+            Log.d(TAG, "=== GET PROFILE BY ID RESPONSE ===")
+            Log.d(TAG, "Status: ${response.code()}")
+
+            if (response.isSuccessful) {
+                val profiles = response.body().orEmpty()
+                Log.d(TAG, "Number of profiles returned: ${profiles.size}")
+
+                if (profiles.isNotEmpty()) {
+                    val profile = profiles.first()
+                    Log.d(TAG, "✅ Profile fetched successfully for user: $userId")
+                    Result.success(profile)
+                } else {
+                    Log.e(TAG, "❌ No profile found for user ID: $userId")
+                    Result.failure(Exception("Profile not found"))
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "❌ Profile fetch failed - Status: ${response.code()}, Error: $errorBody")
+                Result.failure(Exception("Failed to fetch profile: ${response.code()} - $errorBody"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Get profile by ID exception", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getFollowerCount(userId: String): Result<Int> = withContext(Dispatchers.IO) {
+        Log.d(TAG, "🔍 Getting follower count for userId: $userId")
+        try {
+            val token = sessionManager.getAccessToken() ?: run {
+                Log.e(TAG, "❌ No access token available for getFollowerCount")
+                return@withContext Result.failure(Exception("No access token"))
+            }
+
+            Log.d(TAG, "📡 Making API call to get follower count...")
+            val response = profileApiService.getFollowerCount(
+                followingId = "eq.$userId",
+                auth = "Bearer $token"
+            )
+
+            if (response.isSuccessful) {
+                val responseBody = response.body()
+                val count = responseBody?.firstOrNull()?.count ?: 0
+                Log.d(TAG, "✅ Successfully got follower count: $count for userId: $userId")
+                Log.d(TAG, "📄 Response body size: ${responseBody?.size ?: 0}")
+                Result.success(count)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "❌ Failed to get follower count - Code: ${response.code()}, Error: $errorBody")
+                Result.failure(Exception("Failed to get follower count: ${response.code()} - $errorBody"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "💥 Exception in getFollowerCount for userId: $userId", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getFollowingCount(userId: String): Result<Int> = withContext(Dispatchers.IO) {
+        Log.d(TAG, "🔍 Getting following count for userId: $userId")
+        try {
+            val token = sessionManager.getAccessToken() ?: run {
+                Log.e(TAG, "❌ No access token available for getFollowingCount")
+                return@withContext Result.failure(Exception("No access token"))
+            }
+
+            Log.d(TAG, "📡 Making API call to get following count...")
+            val response = profileApiService.getFollowingCount(
+                followerId = "eq.$userId",
+                auth = "Bearer $token"
+            )
+
+            if (response.isSuccessful) {
+                val responseBody = response.body()
+                val count = responseBody?.firstOrNull()?.count ?: 0
+                Log.d(TAG, "✅ Successfully got following count: $count for userId: $userId")
+                Log.d(TAG, "📄 Response body size: ${responseBody?.size ?: 0}")
+                Result.success(count)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "❌ Failed to get following count - Code: ${response.code()}, Error: $errorBody")
+                Result.failure(Exception("Failed to get following count: ${response.code()} - $errorBody"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "💥 Exception in getFollowingCount for userId: $userId", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun checkIfFollowing(targetUserId: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val currentUserId = sessionManager.getUserId() ?: run {
+                Log.e(TAG, "❌ Not authenticated - no current user ID")
+                return@withContext Result.failure(Exception("Not authenticated"))
+            }
+
+            val token = sessionManager.getAccessToken() ?: run {
+                Log.e(TAG, "❌ No access token available for checkIfFollowing")
+                return@withContext Result.failure(Exception("No access token"))
+            }
+
+            Log.d(TAG, "🔍 Checking if user $currentUserId is following $targetUserId")
+
+            val response = profileApiService.checkIfFollowing(
+                followerId = "eq.$currentUserId",
+                followingId = "eq.$targetUserId",
+                auth = "Bearer $token"
+            )
+
+            if (response.isSuccessful) {
+                val responseBody = response.body()
+                val isFollowing = responseBody?.isNotEmpty() ?: false
+                Log.d(TAG, "✅ Follow status check result: $isFollowing (response size: ${responseBody?.size ?: 0})")
+                Log.d(TAG, "📄 Response body content: $responseBody")
+                Result.success(isFollowing)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "❌ Failed to check following status - Code: ${response.code()}, Error: $errorBody")
+                Result.failure(Exception("Failed to check following status: ${response.code()} - $errorBody"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "💥 Exception in checkIfFollowing for targetUserId: $targetUserId", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun toggleFollow(targetUserId: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        Log.d("ProfileRepository", "toggleFollow called with targetUserId: $targetUserId")
+
+        try {
+            Log.d("ProfileRepository", "Retrieving authentication credentials")
+
+            val currentUserId = sessionManager.getUserId()
+            if (currentUserId == null) {
+                Log.e("ProfileRepository", "toggleFollow failed - current user ID is null")
+                return@withContext Result.failure(Exception("Not authenticated"))
+            }
+            Log.d("ProfileRepository", "Current user ID retrieved: $currentUserId")
+
+            val token = sessionManager.getAccessToken()
+            if (token == null) {
+                Log.e("ProfileRepository", "toggleFollow failed - access token is null")
+                return@withContext Result.failure(Exception("No access token"))
+            }
+            Log.d("ProfileRepository", "Access token retrieved successfully")
+
+            val requestBody = mapOf(
+                "follower_id" to currentUserId,
+                "following_id" to targetUserId
+            )
+            Log.d("ProfileRepository", "Request body prepared: $requestBody")
+
+            Log.d("ProfileRepository", "Making API call to followUserRpc")
+            val response = profileApiService.followUserRpc(
+                token = "Bearer $token",
+                body = requestBody
+            )
+
+            Log.d("ProfileRepository", "API response received - isSuccessful: ${response.isSuccessful}, code: ${response.code()}")
+
+            if (response.isSuccessful) {
+                val result = response.body()
+                Log.d("ProfileRepository", "Response body: $result")
+
+                if (result != null) {
+                    Log.d("ProfileRepository", "Follow toggle successful - following: ${result.following}")
+                    Log.d("ProfileRepository", "User $currentUserId is now ${if (result.following) "following" else "not following"} user $targetUserId")
+                    Result.success(result.following)
+                } else {
+                    Log.e("ProfileRepository", "Follow toggle failed - response body is null")
+                    Result.failure(Exception("Empty response from follow toggle"))
+                }
+            } else {
+                val errorBody = try {
+                    response.errorBody()?.string()
+                } catch (ex: Exception) {
+                    Log.w("ProfileRepository", "Error reading error body: ${ex.message}")
+                    "Unable to read error body"
+                }
+
+                val errorMessage = "Failed to toggle follow: ${response.code()} - $errorBody"
+                Log.e("ProfileRepository", "Follow toggle API failed: $errorMessage")
+                Log.e("ProfileRepository", "Failed follow attempt - currentUserId: $currentUserId, targetUserId: $targetUserId")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            Log.e("ProfileRepository", "Exception in toggleFollow - currentUser attempting to follow targetUserId: $targetUserId", e)
+            Log.e("ProfileRepository", "Exception details: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUserStats(userId: String): Result<UserStats> = withContext(Dispatchers.IO) {
+        Log.d(TAG, "📊 Loading user stats for userId: $userId")
+        try {
+            Log.d(TAG, "🔄 Fetching follower count, following count, and follow status...")
+
+            val followersResult = getFollowerCount(userId)
+            val followingResult = getFollowingCount(userId)
+            val isFollowingResult = checkIfFollowing(userId)
+
+            Log.d(TAG, "📈 Stats results - Followers: ${followersResult.isSuccess}, Following: ${followingResult.isSuccess}, IsFollowing: ${isFollowingResult.isSuccess}")
+
+            if (followersResult.isSuccess && followingResult.isSuccess && isFollowingResult.isSuccess) {
+                val stats = UserStats(
+                    followersCount = followersResult.getOrDefault(0),
+                    followingCount = followingResult.getOrDefault(0),
+                    isFollowing = isFollowingResult.getOrDefault(false)
+                )
+                Log.d(TAG, "✅ Successfully loaded user stats: $stats")
+                Result.success(stats)
+            } else {
+                val errors = listOfNotNull(
+                    followersResult.exceptionOrNull()?.message?.let { "Followers: $it" },
+                    followingResult.exceptionOrNull()?.message?.let { "Following: $it" },
+                    isFollowingResult.exceptionOrNull()?.message?.let { "IsFollowing: $it" }
+                )
+                Log.e(TAG, "❌ Failed to load complete user stats. Errors: ${errors.joinToString(", ")}")
+                Result.failure(Exception("Failed to load user stats: ${errors.joinToString(", ")}"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "💥 Exception in getUserStats for userId: $userId", e)
             Result.failure(e)
         }
     }

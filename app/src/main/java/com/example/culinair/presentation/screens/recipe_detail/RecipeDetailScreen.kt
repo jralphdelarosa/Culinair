@@ -43,6 +43,7 @@ import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -91,6 +92,7 @@ import com.example.culinair.presentation.LikeAnimation
 import com.example.culinair.presentation.SaveAnimation
 import com.example.culinair.presentation.theme.AppStandardYellow
 import com.example.culinair.presentation.theme.BrandBackground
+import com.example.culinair.presentation.theme.BrandGold
 import com.example.culinair.presentation.theme.BrandGreen
 import com.example.culinair.presentation.viewmodel.profile.ProfileViewModel
 import com.example.culinair.presentation.viewmodel.recipe.RecipeViewModel
@@ -115,6 +117,8 @@ fun RecipeDetailScreen(
 
     var showLikeAnimation by remember { mutableStateOf(false) }
     var showSaveAnimation by remember { mutableStateOf(false) }
+
+    var showProfileDialog by remember { mutableStateOf(false) }
 
     val sampleTags = listOf(
         "Easy",
@@ -180,6 +184,51 @@ fun RecipeDetailScreen(
                         .height(280.dp),
                     contentAlignment = Alignment.Center
                 ) {
+                    if (showProfileDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showProfileDialog = false },
+                            title = {
+                                Text(
+                                    text = "Visit Profile?",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF2F4F4F)
+                                )
+                                    },
+                            text = {
+                                Text(
+                                    text = "Do you want to visit ${recipe.displayName}'s profile?",
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF2F4F4F)
+                                ) },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showProfileDialog = false
+                                        navController.navigate("other_profile/${recipe.userId}")
+                                    },
+                                    colors = ButtonDefaults.textButtonColors(
+                                        contentColor = BrandGold
+                                    )
+                                ) {
+                                    Text("Yes")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(
+                                    onClick = { showProfileDialog = false },
+                                    colors = ButtonDefaults.textButtonColors(
+                                        contentColor = BrandGold
+                                    )
+                                ) {
+                                    Text("Cancel")
+                                }
+                            },
+                            containerColor = BrandBackground,
+                            titleContentColor = Color(0xFF2F4F4F),
+                            textContentColor = Color(0xFF2F4F4F)
+                        )
+                    }
                     AsyncImage(
                         model = recipe.imageUrl,
                         contentDescription = null,
@@ -213,10 +262,18 @@ fun RecipeDetailScreen(
                         sampleTags.forEach { tag ->
                             Box(
                                 modifier = Modifier
-                                    .background(Color.Black.copy(alpha = 0.5f), shape = RoundedCornerShape(50))
+                                    .background(
+                                        Color.Black.copy(alpha = 0.5f),
+                                        shape = RoundedCornerShape(50)
+                                    )
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
-                                Text(tag, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    tag,
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
                         }
                     }
@@ -233,7 +290,10 @@ fun RecipeDetailScreen(
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { showProfileDialog = true }
+                        ) {
                             AsyncImage(
                                 model = recipe.avatarUrl,
                                 contentDescription = null,
@@ -263,7 +323,9 @@ fun RecipeDetailScreen(
                         FloatingActionButton(
                             onClick = {
                                 if (!recipe.isLikedByCurrentUser) showLikeAnimation = true
-                                recipeViewModel.likeRecipe(recipe.id)
+                                recipeViewModel.likeRecipe(
+                                    recipeId = recipe.id,
+                                    recipeOwner = recipe.userId ?: "")
                             },
                             containerColor = Color.White.copy(alpha = 0.6f),
                             elevation = FloatingActionButtonDefaults.elevation(0.dp)
@@ -278,7 +340,9 @@ fun RecipeDetailScreen(
                         FloatingActionButton(
                             onClick = {
                                 if (!recipe.isSavedByCurrentUser) showSaveAnimation = true
-                                recipeViewModel.saveRecipe(recipe.id)
+                                recipeViewModel.saveRecipe(
+                                    recipeId = recipe.id,
+                                    recipeOwner = recipe.userId ?: "")
                             },
                             containerColor = Color.White.copy(alpha = 0.6f),
                             elevation = FloatingActionButtonDefaults.elevation(0.dp)
@@ -357,7 +421,8 @@ fun RecipeDetailScreen(
                         recipeViewModel.addComment(
                             recipeId = recipeId,
                             parentCommentId = parentId,
-                            content = content
+                            content = content,
+                            recipeOwner = recipe.userId ?: ""
                         )
                     },
                     isAddingComment = recipeViewModel.isAddingComment.collectAsState().value,

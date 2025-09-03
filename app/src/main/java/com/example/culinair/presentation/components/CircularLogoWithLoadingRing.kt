@@ -1,4 +1,4 @@
-package com.example.culinair.presentation.dialogs
+package com.example.culinair.presentation.components
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode

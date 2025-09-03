@@ -4,15 +4,20 @@ import android.content.Context
 import android.util.Log
 import com.example.culinair.data.local.session.SessionManager
 import com.example.culinair.data.remote.apiservice.HomeApiService
+import com.example.culinair.data.remote.apiservice.NotificationApiService
 import com.example.culinair.data.remote.apiservice.ProfileApiService
 import com.example.culinair.data.remote.apiservice.RecipeApiService
 import com.example.culinair.data.remote.apiservice.SupabaseAuthService
+import com.example.culinair.data.remote.interceptors.AuthTokenInterceptor
+import com.example.culinair.data.remote.interceptors.TokenRefreshInterceptor
 import com.example.culinair.data.repository.AuthRepositoryImpl
 import com.example.culinair.data.repository.HomeRepositoryImpl
+import com.example.culinair.data.repository.NotificationsRepositoryImpl
 import com.example.culinair.data.repository.ProfileRepositoryImpl
 import com.example.culinair.data.repository.RecipeRepositoryImpl
 import com.example.culinair.domain.repository.AuthRepository
 import com.example.culinair.domain.repository.HomeRepository
+import com.example.culinair.domain.repository.NotificationsRepository
 import com.example.culinair.domain.repository.ProfileRepository
 import com.example.culinair.domain.repository.RecipeRepository
 import com.example.culinair.utils.Constants
@@ -26,6 +31,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -46,12 +52,53 @@ object NetworkModule {
     @Named("supabase_anon_key")
     fun provideSupabaseAnonKey(): String = Constants.SUPABASE_ANON_KEY
 
+    // Basic OkHttpClient without interceptors for token refresh
+    @Provides
+    @Singleton
+    @Named("token_refresh_client")
+    fun provideTokenRefreshOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
+
+    // Separate Retrofit instance for token refresh (no interceptors)
+    @Provides
+    @Singleton
+    @Named("token_refresh_retrofit")
+    fun provideTokenRefreshRetrofit(
+        @Named("token_refresh_client") okHttpClient: OkHttpClient,
+        @Named("supabase_url") baseUrl: String
+    ): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    // Service for token refresh only
+    @Provides
+    @Singleton
+    @Named("token_refresh_service")
+    fun provideTokenRefreshService(
+        @Named("token_refresh_retrofit") retrofit: Retrofit
+    ): SupabaseAuthService {
+        return retrofit.create(SupabaseAuthService::class.java)
+    }
+
     @Provides
     @Singleton
     fun provideOkHttpClient(
-        @Named("supabase_anon_key") anonKey: String
+        @Named("supabase_anon_key") anonKey: String,
+        tokenRefreshInterceptor: TokenRefreshInterceptor,
+        authTokenInterceptor: AuthTokenInterceptor
     ): OkHttpClient {
         return OkHttpClient.Builder()
+            .addInterceptor(authTokenInterceptor) // Add token to requests
+            .addInterceptor(tokenRefreshInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
@@ -83,7 +130,7 @@ object NetworkModule {
         return Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create()) // Add this
+            .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
@@ -109,6 +156,12 @@ object NetworkModule {
     @Singleton
     fun provideHomeApiService(retrofit: Retrofit): HomeApiService {
         return retrofit.create(HomeApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationsApiService(retrofit: Retrofit): NotificationApiService {
+        return retrofit.create(NotificationApiService::class.java)
     }
 
     @Provides
@@ -145,8 +198,16 @@ object NetworkModule {
     @Singleton
     fun provideHomeRepository(
         service: HomeApiService,
-        sessionManager: SessionManager
     ): HomeRepository {
         return HomeRepositoryImpl(service)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationsRepository(
+        service: NotificationApiService,
+        sessionManager: SessionManager
+    ): NotificationsRepository {
+        return NotificationsRepositoryImpl(sessionManager, service)
     }
 }

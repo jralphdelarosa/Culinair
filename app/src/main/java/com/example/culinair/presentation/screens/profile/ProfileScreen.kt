@@ -71,9 +71,12 @@ import com.example.culinair.domain.model.SocialLink
 import com.example.culinair.domain.model.SocialPlatform
 import com.example.culinair.presentation.components.CulinairCompactTextField
 import com.example.culinair.presentation.dialogs.ErrorDialog
+import com.example.culinair.presentation.screens.other_profile.EnhancedUserStatsCard
+import com.example.culinair.presentation.screens.other_profile.RecipePostsSection
 import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGreen
 import com.example.culinair.presentation.viewmodel.profile.ProfileViewModel
+import com.example.culinair.presentation.viewmodel.recipe.RecipeViewModel
 
 /**
  * Created by John Ralph Dela Rosa on 7/26/2025.
@@ -83,7 +86,9 @@ import com.example.culinair.presentation.viewmodel.profile.ProfileViewModel
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    recipeViewModel: RecipeViewModel,
+    onRecipeClick: (String) -> Unit
 ) {
     val avatarUrl = viewModel.avatarUrl
     val coverPhotoUrl = viewModel.coverPhotoUrl
@@ -129,11 +134,19 @@ fun ProfileScreen(
                         }
                     } else {
                         IconButton(onClick = { isEditMode = false }) {
-                            Icon(Icons.Default.Close, contentDescription = "Cancel", tint = BrandGreen)
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Cancel",
+                                tint = BrandGreen
+                            )
                         }
                     }
                     IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings", tint = BrandGreen)
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = BrandGreen
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BrandBackground)
@@ -141,7 +154,7 @@ fun ProfileScreen(
         }
     ) { innerPadding ->
         if (isLoadingProfile) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.fillMaxSize().background(BrandBackground), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = BrandGreen)
             }
         } else {
@@ -159,12 +172,17 @@ fun ProfileScreen(
                             .height(220.dp)
                             .clickable(enabled = isEditMode) { coverPickerLauncher.launch("image/*") }
                     ) {
-                        AsyncImage(
-                            model = coverPhotoUrl ?: "https://via.placeholder.com/600x200.png",
-                            contentDescription = "Cover Photo",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        if (isUploadingCoverPhoto) {
+                            CircularProgressIndicator(color = BrandGreen)
+
+                        } else {
+                            AsyncImage(
+                                model = coverPhotoUrl ?: "https://via.placeholder.com/600x200.png",
+                                contentDescription = "Cover Photo",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
 
                         // Gradient for text readability
                         Box(
@@ -178,7 +196,7 @@ fun ProfileScreen(
                         )
 
                         // Name + Bio overlay
-                        if(!isEditMode) {
+                        if (!isEditMode) {
                             Column(
                                 modifier = Modifier
                                     .align(Alignment.BottomCenter)
@@ -241,7 +259,11 @@ fun ProfileScreen(
                                     contentScale = ContentScale.Crop
                                 )
                             } else {
-                                Icon(Icons.Default.Person, contentDescription = null, tint = Color.DarkGray)
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = Color.DarkGray
+                                )
                             }
                             if (isEditMode) {
                                 Icon(
@@ -259,14 +281,29 @@ fun ProfileScreen(
                     }
                 }
 
-                // Social links
+
                 if (!isEditMode) {
+
+                    // User Stats
+                    item {
+                        EnhancedUserStatsCard(
+                            userStats = viewModel.userStats,
+                            profileId = viewModel.profile?.id ?: "",
+                            recipeViewModel = recipeViewModel,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .offset(y = (-30).dp)
+                        )
+                    }
+
+                    // Social links
                     item {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 16.dp)
-                                .offset(y = (-50).dp)// Remove negative offset
+                                .offset(y = (-30).dp)// Remove negative offset
                         ) {
                             Text(
                                 "Socials",
@@ -283,6 +320,32 @@ fun ProfileScreen(
                             )
                         }
                     }
+
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 24.dp)
+                                .offset(y = (-30).dp)
+                        ) {
+                            Text(
+                                "Recipe Posts",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = BrandGreen,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            )
+
+                            RecipePostsSection(
+                                userId = viewModel.profile?.id ?: "",
+                                recipeViewModel = recipeViewModel,
+                                onRecipeClick = onRecipeClick,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+                    }
+
+                    item { Spacer(Modifier.height(48.dp)) }
                 } else {
                     // Editable Cards
                     item {
@@ -294,11 +357,23 @@ fun ProfileScreen(
                             elevation = CardDefaults.cardElevation(4.dp)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                Text("Personal Info", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Text(
+                                    "Personal Info",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
                                 Spacer(Modifier.height(12.dp))
-                                CulinairCompactTextField(viewModel.displayName, { viewModel.displayName = it }, "Display Name")
+                                CulinairCompactTextField(
+                                    viewModel.displayName,
+                                    { viewModel.displayName = it },
+                                    "Display Name"
+                                )
                                 Spacer(Modifier.height(8.dp))
-                                CulinairCompactTextField(viewModel.bio, { viewModel.bio = it }, "Bio")
+                                CulinairCompactTextField(
+                                    viewModel.bio,
+                                    { viewModel.bio = it },
+                                    "Bio"
+                                )
                             }
                         }
                     }
@@ -313,11 +388,23 @@ fun ProfileScreen(
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text("Social Links", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                                 Spacer(Modifier.height(12.dp))
-                                CulinairCompactTextField(viewModel.website, { viewModel.website = it }, "Website")
+                                CulinairCompactTextField(
+                                    viewModel.website,
+                                    { viewModel.website = it },
+                                    "Website"
+                                )
                                 Spacer(Modifier.height(8.dp))
-                                CulinairCompactTextField(viewModel.instagram, { viewModel.instagram = it }, "Instagram")
+                                CulinairCompactTextField(
+                                    viewModel.instagram,
+                                    { viewModel.instagram = it },
+                                    "Instagram"
+                                )
                                 Spacer(Modifier.height(8.dp))
-                                CulinairCompactTextField(viewModel.twitter, { viewModel.twitter = it }, "Twitter")
+                                CulinairCompactTextField(
+                                    viewModel.twitter,
+                                    { viewModel.twitter = it },
+                                    "Twitter"
+                                )
                             }
                         }
                     }
@@ -360,6 +447,12 @@ fun ProfileScreen(
         title = "Avatar Upload Error",
         message = uploadError ?: "",
         isVisible = uploadError != null,
+        onDismiss = { viewModel.clearErrors() }
+    )
+    ErrorDialog(
+        title = "Cover Photo Upload Error",
+        message = coverPhotoUploadError ?: "",
+        isVisible = coverPhotoUploadError != null,
         onDismiss = { viewModel.clearErrors() }
     )
     ErrorDialog(
@@ -432,6 +525,7 @@ fun SocialLinks(
                         onClick = { openUrl(context, socialLinks[0].url) }
                     )
                 }
+
                 2 -> {
                     // Two items - side by side
                     Row(
@@ -447,6 +541,7 @@ fun SocialLinks(
                         }
                     }
                 }
+
                 else -> {
                     // Three or more items - two per row
                     socialLinks.chunked(2).forEach { rowItems ->
@@ -553,7 +648,7 @@ fun SocialLinkCard(
 @Composable
 fun InstagramIcon(modifier: Modifier = Modifier) {
     Icon(
-        painter = painterResource(id = R.drawable.ic_instagram), // You'll need to add this
+        painter = painterResource(id = R.drawable.ic_instagram),
         contentDescription = "Instagram",
         tint = Color.White,
         modifier = modifier.size(24.dp)
@@ -563,7 +658,7 @@ fun InstagramIcon(modifier: Modifier = Modifier) {
 @Composable
 fun TwitterIcon(modifier: Modifier = Modifier) {
     Icon(
-        painter = painterResource(id = R.drawable.ic_twitter), // You'll need to add this
+        painter = painterResource(id = R.drawable.ic_twitter),
         contentDescription = "Twitter",
         tint = Color.White,
         modifier = modifier.size(24.dp)
@@ -585,6 +680,6 @@ fun openUrl(context: Context, url: String) {
         val intent = Intent(Intent.ACTION_VIEW, url.toUri())
         context.startActivity(intent)
     } catch (e: Exception) {
-        Toast.makeText(context, "Something went wrong." , Toast.LENGTH_LONG ).show()
+        Toast.makeText(context, "Something went wrong.", Toast.LENGTH_LONG).show()
     }
 }

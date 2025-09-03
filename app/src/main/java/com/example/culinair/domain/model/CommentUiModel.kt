@@ -26,7 +26,7 @@ fun CommentResponse.toUiModel(): CommentUiModel {
         avatarUrl = userProfile?.avatarUrl,
         content = content,
         createdAt = createdAt,
-        parentId = parentCommentId, // Add this!
+        parentId = parentCommentId,
         children = emptyList()
     )
 }

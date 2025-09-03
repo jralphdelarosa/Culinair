@@ -55,7 +55,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    // Add this method to check and restore session on app start
+    //method to check and restore session on app start
     override suspend fun restoreSession(): Result<UserSession?> {
         return try {
             if (!sessionManager.isLoggedIn()) {
@@ -69,7 +69,7 @@ class AuthRepositoryImpl @Inject constructor(
 
             if (accessToken != null && refreshToken != null && userId != null && authMethod != null) {
                 // Verify the token is still valid by making a test request
-                val isValid = verifyTokenValidity(accessToken)
+                val isValid = verifyTokenValidity()
 
                 if (isValid) {
                     val session = UserSession(accessToken, refreshToken, authMethod, userId)
@@ -82,7 +82,8 @@ class AuthRepositoryImpl @Inject constructor(
                         val newAccessToken = sessionManager.getAccessToken()
                         val newRefreshToken = sessionManager.getRefreshToken()
                         if (newAccessToken != null && newRefreshToken != null) {
-                            val session = UserSession(newAccessToken, newRefreshToken, authMethod, userId)
+                            val session =
+                                UserSession(newAccessToken, newRefreshToken, authMethod, userId)
                             Result.success(session)
                         } else {
                             // Clear invalid session
@@ -106,13 +107,12 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    // Add this helper method to verify token validity
-    private suspend fun verifyTokenValidity(token: String): Boolean {
+    //helper method to verify token validity
+    private suspend fun verifyTokenValidity(): Boolean {
         return try {
             // Make a simple request to verify the token is still valid
             val response = service.checkProfile(
-                mapOf("limit" to "1"),
-                "Bearer $token"
+                mapOf("limit" to "1")
             )
             response.isSuccessful
         } catch (e: Exception) {
@@ -334,13 +334,13 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+
     override suspend fun ensureProfileExists(userId: String, token: String): Result<Unit> =
         withContext(Dispatchers.IO) {
             Log.d("AuthRepository", "=== ENSURE PROFILE EXISTS DEBUG ===")
             Log.d("AuthRepository", "User ID: $userId")
             Log.d("AuthRepository", "Token present: ${token.isNotBlank()}")
 
-            val authHeader = "Bearer $token"
             val maxRetries = 3
             val retryDelayMillis = 2000L
 
@@ -348,20 +348,15 @@ class AuthRepositoryImpl @Inject constructor(
                 try {
                     Log.d("AuthRepository", "=== PROFILE CHECK ATTEMPT ${attempt + 1} ===")
 
-                    val checkResponse =
-                        service.checkProfile(mapOf("id" to "eq.$userId"), authHeader)
+                    // Interceptor will automatically add authorization header
+                    val checkResponse = service.checkProfile(mapOf("id" to "eq.$userId"))
 
                     Log.d("AuthRepository", "Check profile response:")
                     Log.d("AuthRepository", "Status: ${checkResponse.code()}")
-                    Log.d("AuthRepository", "Headers:")
-                    checkResponse.headers().forEach { header ->
-                        Log.d("AuthRepository", "  ${header.first}: ${header.second}")
-                    }
 
                     if (checkResponse.isSuccessful) {
                         val body = checkResponse.body()
                         Log.d("AuthRepository", "Profile check body: $body")
-                        Log.d("AuthRepository", "Body is null or empty: ${body.isNullOrEmpty()}")
 
                         if (body.isNullOrEmpty()) {
                             Log.d("AuthRepository", "=== CREATING NEW PROFILE ===")
@@ -369,19 +364,9 @@ class AuthRepositoryImpl @Inject constructor(
                             val profile = JsonObject().apply {
                                 addProperty("id", userId)
                             }
-                            Log.d("AuthRepository", "Profile data to insert: $profile")
 
-                            val insertResponse = service.createProfile(authHeader, profile)
-
-                            Log.d("AuthRepository", "Create profile response:")
-                            Log.d("AuthRepository", "Status: ${insertResponse.code()}")
-                            Log.d("AuthRepository", "Headers:")
-                            insertResponse.headers().forEach { header ->
-                                Log.d("AuthRepository", "  ${header.first}: ${header.second}")
-                            }
-
-                            val insertBody = insertResponse.body()
-                            Log.d("AuthRepository", "Insert response body: $insertBody")
+                            // Interceptor will automatically add authorization header
+                            val insertResponse = service.createProfile(profile)
 
                             if (!insertResponse.isSuccessful) {
                                 val errorBody = insertResponse.errorBody()?.string()
@@ -389,9 +374,7 @@ class AuthRepositoryImpl @Inject constructor(
                                     "AuthRepository",
                                     "❌ Profile insert failed - Status: ${insertResponse.code()}, Error: $errorBody"
                                 )
-                                return@withContext Result.failure(
-                                    Exception("Insert failed: ${insertResponse.code()} - $errorBody")
-                                )
+                                return@withContext Result.failure(Exception("Insert failed: ${insertResponse.code()} - $errorBody"))
                             } else {
                                 Log.d("AuthRepository", "✅ Profile created successfully")
                             }
@@ -399,7 +382,6 @@ class AuthRepositoryImpl @Inject constructor(
                             Log.d("AuthRepository", "✅ Profile already exists")
                         }
 
-                        Log.d("AuthRepository", "✅ Profile ensured successfully")
                         return@withContext Result.success(Unit)
                     } else {
                         val errorBody = checkResponse.errorBody()?.string()
@@ -407,17 +389,13 @@ class AuthRepositoryImpl @Inject constructor(
                             "AuthRepository",
                             "❌ Profile check failed - Status: ${checkResponse.code()}, Error: $errorBody"
                         )
-                        return@withContext Result.failure(
-                            Exception("Check failed: ${checkResponse.code()} - $errorBody")
-                        )
+                        return@withContext Result.failure(Exception("Check failed: ${checkResponse.code()} - $errorBody"))
                     }
                 } catch (e: ConnectTimeoutException) {
                     Log.w("AuthRepository", "⏰ Timeout on attempt ${attempt + 1}: ${e.message}")
                     if (attempt < maxRetries - 1) {
-                        Log.d("AuthRepository", "Retrying in ${retryDelayMillis}ms...")
                         delay(retryDelayMillis)
                     } else {
-                        Log.e("AuthRepository", "❌ All timeout retries exhausted")
                         return@withContext Result.failure(e)
                     }
                 } catch (e: Exception) {
@@ -430,7 +408,6 @@ class AuthRepositoryImpl @Inject constructor(
                 }
             }
 
-            Log.e("AuthRepository", "❌ All retries exhausted")
             return@withContext Result.failure(Exception("Retries exhausted"))
         }
 }

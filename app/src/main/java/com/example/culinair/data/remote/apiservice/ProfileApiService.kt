@@ -2,11 +2,16 @@ package com.example.culinair.data.remote.apiservice
 
 import com.example.culinair.data.remote.dto.request.UpdateProfileRequest
 import com.example.culinair.data.remote.dto.response.ApiResponse
+import com.example.culinair.data.remote.dto.response.FollowToggleResponse
 import com.example.culinair.data.remote.dto.response.ProfileResponse
+import com.example.culinair.domain.model.CountResponse
+import com.example.culinair.domain.model.FollowRequest
+import com.example.culinair.domain.model.FollowerResponse
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.PATCH
@@ -52,4 +57,47 @@ interface ProfileApiService {
         @Header("x-upsert") upsert: String = "true",
         @Body image: RequestBody
     ): Response<ResponseBody>
+
+    // Follower endpoints
+    @GET("rest/v1/followers")
+    suspend fun getFollowerCount(
+        @Query("following_id") followingId: String,
+        @Query("select") select: String = "count",
+        @Header("Authorization") auth: String
+    ): Response<List<CountResponse>>
+
+    @GET("rest/v1/followers")
+    suspend fun getFollowingCount(
+        @Query("follower_id") followerId: String,
+        @Query("select") select: String = "count",
+        @Header("Authorization") auth: String
+    ): Response<List<CountResponse>>
+
+    @GET("rest/v1/followers")
+    suspend fun checkIfFollowing(
+        @Query("follower_id") followerId: String,
+        @Query("following_id") followingId: String,
+        @Header("Authorization") auth: String
+    ): Response<List<FollowerResponse>>
+
+//    @POST("rest/v1/followers")
+//    suspend fun followUser(
+//        @Header("Authorization") auth: String,
+//        @Header("Prefer") prefer: String = "resolution=merge-duplicates",
+//        @Body followRequest: FollowRequest
+//    ): Response<ResponseBody>
+//
+//    @DELETE("rest/v1/followers")
+//    suspend fun unfollowUser(
+//        @Query("follower_id") followerId: String,
+//        @Query("following_id") followingId: String,
+//        @Header("Authorization") auth: String
+//    ): Response<ResponseBody>
+
+    @POST("rest/v1/rpc/follow_user")
+    suspend fun followUserRpc(
+        @Header("Authorization") token: String,
+        @Body body: Map<String, String> // { "follower_id": "...", "following_id": "..." }
+    ): Response<FollowToggleResponse>
+
 }

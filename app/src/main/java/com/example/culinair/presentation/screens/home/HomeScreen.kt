@@ -93,7 +93,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(BrandBackground)
-                .padding(16.dp)
+                .padding(top = 16.dp, start = 16.dp, end = 16.dp)
         ) {
             item { HomeHeader({}, {}) }
             item { Spacer(Modifier.height(12.dp)) }
@@ -105,8 +105,8 @@ fun HomeScreen(
                 RecipeCard(
                     recipe = recipe,
                     onClick = { navController.navigate("recipe_detail/${recipe.id}") },
-                    onLike = { recipeViewModel.likeRecipe(recipe.id) },
-                    onSave = { recipeViewModel.saveRecipe(recipe.id) }
+                    onLike = { recipeViewModel.likeRecipe(recipe.id, recipe.userId.toString()) },
+                    onSave = { recipeViewModel.saveRecipe(recipe.id, recipe.userId.toString()) }
                 )
                 Spacer(Modifier.height(20.dp))
             }
@@ -221,7 +221,7 @@ fun RecipeCard(
         Column {
             Box(
                 modifier = Modifier.height(200.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 AsyncImage(
                     model = recipe.imageUrl.ifBlank { "https://via.placeholder.com/400x300?text=No+Image" },

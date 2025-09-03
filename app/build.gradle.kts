@@ -75,7 +75,6 @@ dependencies {
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
 
-    // Add these to your dependencies block
     implementation(libs.retrofit.core)
     implementation(libs.converter.gson)
     implementation(libs.okhttp.core)

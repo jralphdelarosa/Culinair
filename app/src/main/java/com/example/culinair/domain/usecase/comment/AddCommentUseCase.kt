@@ -19,14 +19,16 @@ class AddCommentUseCase @Inject constructor(
         userId: String,
         recipeId: String,
         content: String,
-        parentCommentId: String? = null
+        parentCommentId: String? = null,
+        recipeOwner: String
     ): AddCommentResponse? {
         return repository.addCommentAndUpdateCount(
             token = token,
             recipeId = recipeId,
             userId = userId,
             content = content,
-            parentCommentId = parentCommentId
+            parentCommentId = parentCommentId,
+            recipeOwner = recipeOwner
         )
     }
 }

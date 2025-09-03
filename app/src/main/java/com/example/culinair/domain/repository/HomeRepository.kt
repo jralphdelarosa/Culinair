@@ -14,9 +14,33 @@ interface HomeRepository {
     suspend fun getFollowingRecipes(userId: String, token: String): List<RecipeDetailUiModel>
     suspend fun getTrendingRecipes(userId: String, token: String): List<RecipeDetailUiModel>
     suspend fun getRecommendedRecipes(userId: String, token: String): List<RecipeDetailUiModel>
-    suspend fun getRecipesByCategory(userId: String, category: String, token: String): List<RecipeDetailUiModel>
-    suspend fun likeRecipe(recipeId: String, userId: String, token: String): LikeResponse?
-    suspend fun saveRecipe(recipeId: String, userId: String, token: String): SaveResponse?
+    suspend fun getRecipesByCategory(
+        userId: String,
+        category: String,
+        token: String
+    ): List<RecipeDetailUiModel>
+
+    suspend fun likeRecipe(
+        recipeId: String,
+        userId: String,
+        token: String,
+        recipeOwner: String
+    ): LikeResponse?
+
+    suspend fun saveRecipe(
+        recipeId: String,
+        userId: String,
+        token: String,
+        recipeOwner: String
+    ): SaveResponse?
+
     suspend fun getComments(recipeId: String, token: String): List<CommentUiModel>
-    suspend fun addCommentAndUpdateCount(token: String, recipeId: String, userId: String, content: String, parentCommentId: String?): AddCommentResponse?
+    suspend fun addCommentAndUpdateCount(
+        token: String,
+        recipeId: String,
+        userId: String,
+        content: String,
+        parentCommentId: String?,
+        recipeOwner: String
+    ): AddCommentResponse?
 }
