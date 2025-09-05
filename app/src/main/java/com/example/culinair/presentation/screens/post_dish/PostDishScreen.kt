@@ -102,6 +102,7 @@ fun PostDishScreen(
             actions = {
                 TextButton(
                     onClick = {
+                        viewModel.processTagsInput()
                         viewModel.createRecipe(
                             onSuccess = {
                                 showSuccessDialog = true
@@ -455,12 +456,7 @@ fun PostDishScreen(
                         )
                     },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .onFocusChanged { focusState ->
-                            if (!focusState.isFocused) {
-                                viewModel.processTagsInput()
-                            }
-                        },
+                        .fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = BrandGold,
                         unfocusedBorderColor = Color(0xFF2F4F4F).copy(alpha = 0.3f),
