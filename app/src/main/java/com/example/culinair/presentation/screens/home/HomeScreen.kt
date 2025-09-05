@@ -218,7 +218,9 @@ fun RecipeCard(
             .fillMaxWidth()
             .clickable { onClick() }
     ) {
-        Column {
+        Column(
+            modifier = Modifier.background(Color.White)
+        ) {
             Box(
                 modifier = Modifier.height(200.dp),
                 contentAlignment = Alignment.Center,

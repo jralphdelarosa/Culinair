@@ -12,7 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.culinair.data.remote.dto.response.UserSession
 import com.example.culinair.domain.repository.AuthRepository
 import com.example.culinair.presentation.navost.CulinairNavHost
-import com.example.culinair.presentation.theme.DishlyTheme
+import com.example.culinair.presentation.theme.CulinairTheme
 import com.example.culinair.presentation.viewmodel.auth.AuthViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity() {
 
 
         setContent {
-            DishlyTheme {
+            CulinairTheme {
                 CulinairNavHost(authViewModel = viewModel, deepLinkResult = deepLinkData)
             }
         }

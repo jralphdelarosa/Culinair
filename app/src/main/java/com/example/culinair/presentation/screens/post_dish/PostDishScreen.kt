@@ -52,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -444,8 +445,8 @@ fun PostDishScreen(
             // Tags
             item {
                 OutlinedTextField(
-                    value = uiState.tags.joinToString(", "),
-                    onValueChange = viewModel::updateTags,
+                    value = uiState.tagsInput, // Use tagsInput instead of tags
+                    onValueChange = viewModel::updateTagsInput,
                     label = { Text("Tags (comma separated)", color = Color(0xFF2F4F4F)) },
                     placeholder = {
                         Text(
@@ -453,7 +454,13 @@ fun PostDishScreen(
                             color = Color(0xFF2F4F4F).copy(alpha = 0.6f)
                         )
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { focusState ->
+                            if (!focusState.isFocused) {
+                                viewModel.processTagsInput()
+                            }
+                        },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = BrandGold,
                         unfocusedBorderColor = Color(0xFF2F4F4F).copy(alpha = 0.3f),

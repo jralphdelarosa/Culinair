@@ -93,8 +93,14 @@ class CreateRecipeViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(difficulty = difficulty)
     }
 
-    fun updateTags(tags: String) {
-        val tagList = tags.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+    // Update your ViewModel methods:
+    fun updateTagsInput(input: String) {
+        _uiState.value = _uiState.value.copy(tagsInput = input)
+    }
+
+
+    fun processTagsInput() {
+        val tagList = _uiState.value.tagsInput.split(","," ").map { it.trim() }.filter { it.isNotEmpty() }
         _uiState.value = _uiState.value.copy(tags = tagList)
     }
 
@@ -146,6 +152,7 @@ data class CreateRecipeUiState(
     val selectedImageUri: Uri? = null,
     val category: String = "",
     val tags: List<String> = emptyList(),
+    val tagsInput: String = "",
     val cookTimeMinutes: Int = 30,
     val difficulty: String = "Easy",
     val isLoading: Boolean = false,
