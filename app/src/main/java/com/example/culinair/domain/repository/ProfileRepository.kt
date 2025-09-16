@@ -1,7 +1,7 @@
 package com.example.culinair.domain.repository
 
 import android.net.Uri
-import com.example.culinair.data.remote.dto.response.ProfileResponse
+import com.example.culinair.data.remote.model.response.ProfileResponse
 import com.example.culinair.domain.model.UserStats
 
 /**

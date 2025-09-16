@@ -1,6 +1,6 @@
 package com.example.culinair.domain.model
 
-import com.example.culinair.data.remote.dto.response.RecipeResponse
+import com.example.culinair.data.remote.model.response.RecipeResponse
 
 /**
  * Created by John Ralph Dela Rosa on 8/6/2025.

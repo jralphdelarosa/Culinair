@@ -1,7 +1,6 @@
 package com.example.culinair.domain.usecase.home
 
-import com.example.culinair.data.remote.dto.response.LikeResponse
-import com.example.culinair.data.remote.dto.response.RecipeLikeResponse
+import com.example.culinair.data.remote.model.response.LikeResponse
 import com.example.culinair.domain.repository.HomeRepository
 import javax.inject.Inject
 

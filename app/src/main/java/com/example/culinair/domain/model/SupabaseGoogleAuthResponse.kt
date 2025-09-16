@@ -1,6 +1,6 @@
 package com.example.culinair.domain.model
 
-import com.example.culinair.data.remote.dto.response.SupabaseUser
+import com.example.culinair.data.remote.model.response.SupabaseUser
 
 /**
  * Created by John Ralph Dela Rosa on 8/12/2025.

@@ -1,6 +1,6 @@
 package com.example.culinair.domain.model
 
-import com.example.culinair.data.remote.dto.response.UserSession
+import com.example.culinair.data.remote.model.response.UserSession
 
 /**
  * Created by John Ralph Dela Rosa on 8/28/2025.

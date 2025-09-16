@@ -3,7 +3,7 @@ package com.example.culinair.data.repository
 import android.util.Log
 import com.example.culinair.data.local.session.SessionManager
 import com.example.culinair.data.remote.apiservice.SupabaseAuthService
-import com.example.culinair.data.remote.dto.response.UserSession
+import com.example.culinair.data.remote.model.response.UserSession
 import com.example.culinair.domain.model.AuthMethod
 import com.example.culinair.domain.repository.AuthRepository
 import com.example.culinair.firebase_notification.FCMTokenManager
@@ -14,7 +14,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.apache.http.conn.ConnectTimeoutException
-import java.security.AuthProvider
 import javax.inject.Inject
 
 /**

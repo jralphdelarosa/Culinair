@@ -5,8 +5,8 @@ import android.net.Uri
 import android.util.Log
 import com.example.culinair.data.local.session.SessionManager
 import com.example.culinair.data.remote.apiservice.ProfileApiService
-import com.example.culinair.data.remote.dto.request.UpdateProfileRequest
-import com.example.culinair.data.remote.dto.response.ProfileResponse
+import com.example.culinair.data.remote.model.request.UpdateProfileRequest
+import com.example.culinair.data.remote.model.response.ProfileResponse
 import com.example.culinair.domain.model.UserStats
 import com.example.culinair.domain.repository.ProfileRepository
 import dagger.hilt.android.qualifiers.ApplicationContext

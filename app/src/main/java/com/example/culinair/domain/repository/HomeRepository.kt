@@ -1,8 +1,8 @@
 package com.example.culinair.domain.repository
 
-import com.example.culinair.data.remote.dto.response.AddCommentResponse
-import com.example.culinair.data.remote.dto.response.LikeResponse
-import com.example.culinair.data.remote.dto.response.SaveResponse
+import com.example.culinair.data.remote.model.response.AddCommentResponse
+import com.example.culinair.data.remote.model.response.LikeResponse
+import com.example.culinair.data.remote.model.response.SaveResponse
 import com.example.culinair.domain.model.CommentUiModel
 import com.example.culinair.domain.model.RecipeDetailUiModel
 

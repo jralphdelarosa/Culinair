@@ -1,4 +1,4 @@
-package com.example.culinair.data.remote.dto.request
+package com.example.culinair.data.remote.model.request
 
 /**
  * Created by John Ralph Dela Rosa on 8/26/2025.

@@ -1,4 +1,4 @@
-package com.example.culinair.data.remote.dto.request
+package com.example.culinair.data.remote.model.request
 
 import com.google.gson.annotations.SerializedName
 

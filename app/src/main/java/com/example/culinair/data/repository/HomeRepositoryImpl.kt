@@ -2,15 +2,13 @@ package com.example.culinair.data.repository
 
 import android.util.Log
 import com.example.culinair.data.remote.apiservice.HomeApiService
-import com.example.culinair.data.remote.dto.request.CommentRequest
-import com.example.culinair.data.remote.dto.response.AddCommentResponse
-import com.example.culinair.data.remote.dto.response.CommentResponse
-import com.example.culinair.data.remote.dto.response.LikeResponse
-import com.example.culinair.data.remote.dto.response.SaveResponse
+import com.example.culinair.data.remote.model.response.AddCommentResponse
+import com.example.culinair.data.remote.model.response.CommentResponse
+import com.example.culinair.data.remote.model.response.LikeResponse
+import com.example.culinair.data.remote.model.response.SaveResponse
 import com.example.culinair.domain.model.CommentUiModel
 import com.example.culinair.domain.model.RecipeDetailUiModel
 import com.example.culinair.domain.model.toPreviewUi
-import com.example.culinair.domain.model.toUiModel
 import com.example.culinair.domain.repository.HomeRepository
 import retrofit2.HttpException
 import javax.inject.Inject

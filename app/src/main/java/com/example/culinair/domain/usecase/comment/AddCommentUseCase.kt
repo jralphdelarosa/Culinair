@@ -1,7 +1,6 @@
 package com.example.culinair.domain.usecase.comment
 
-import com.example.culinair.data.remote.dto.response.AddCommentResponse
-import com.example.culinair.domain.model.CommentUiModel
+import com.example.culinair.data.remote.model.response.AddCommentResponse
 import com.example.culinair.domain.repository.HomeRepository
 import javax.inject.Inject
 

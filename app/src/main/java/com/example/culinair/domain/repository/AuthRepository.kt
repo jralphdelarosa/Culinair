@@ -1,7 +1,7 @@
 package com.example.culinair.domain.repository
 
 import com.example.culinair.data.repository.RegisterResult
-import com.example.culinair.data.remote.dto.response.UserSession
+import com.example.culinair.data.remote.model.response.UserSession
 
 /**
  * Created by John Ralph Dela Rosa on 7/22/2025.

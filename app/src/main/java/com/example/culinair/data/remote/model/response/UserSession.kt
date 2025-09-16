@@ -1,4 +1,4 @@
-package com.example.culinair.data.remote.dto.response
+package com.example.culinair.data.remote.model.response
 
 import com.example.culinair.domain.model.AuthMethod
 import com.google.gson.annotations.SerializedName

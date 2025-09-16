@@ -1,6 +1,5 @@
 package com.example.culinair.presentation.screens.other_profile
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -11,7 +10,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -74,10 +72,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.culinair.data.local.session.SessionManager
-import com.example.culinair.data.remote.dto.response.ProfileResponse
+import com.example.culinair.data.remote.model.response.ProfileResponse
 import com.example.culinair.domain.model.RecipeDetailUiModel
 import com.example.culinair.domain.model.UserStats
 import com.example.culinair.presentation.screens.profile.SocialLinks
@@ -85,7 +81,6 @@ import com.example.culinair.presentation.theme.AppStandardYellow
 import com.example.culinair.presentation.theme.BrandBackground
 import com.example.culinair.presentation.theme.BrandGreen
 import com.example.culinair.presentation.viewmodel.other_profile.OtherProfileViewModel
-import com.example.culinair.presentation.viewmodel.profile.ProfileViewModel
 import com.example.culinair.presentation.viewmodel.recipe.RecipeViewModel
 
 /**

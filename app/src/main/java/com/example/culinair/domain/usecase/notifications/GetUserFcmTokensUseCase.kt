@@ -1,6 +1,6 @@
 package com.example.culinair.domain.usecase.notifications
 
-import com.example.culinair.data.remote.dto.response.FCMTokenResponse
+import com.example.culinair.data.remote.model.response.FCMTokenResponse
 import com.example.culinair.domain.repository.NotificationsRepository
 import javax.inject.Inject
 import javax.inject.Singleton

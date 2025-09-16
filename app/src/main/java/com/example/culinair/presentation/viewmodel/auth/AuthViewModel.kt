@@ -8,7 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.culinair.data.repository.RegisterResult
-import com.example.culinair.data.remote.dto.response.UserSession
+import com.example.culinair.data.remote.model.response.UserSession
 import com.example.culinair.data.remote.google_sign_in.GoogleSignInManager
 import com.example.culinair.domain.model.GoogleSignInResult
 import com.example.culinair.domain.model.SessionRestorationState

@@ -1,7 +1,7 @@
 package com.example.culinair.domain.repository
 
-import com.example.culinair.data.remote.dto.response.FCMTokenResponse
-import com.example.culinair.data.remote.dto.response.NotificationResponse
+import com.example.culinair.data.remote.model.response.FCMTokenResponse
+import com.example.culinair.data.remote.model.response.NotificationResponse
 
 /**
 * Created by John Ralph Dela Rosa on 9/2/2025.

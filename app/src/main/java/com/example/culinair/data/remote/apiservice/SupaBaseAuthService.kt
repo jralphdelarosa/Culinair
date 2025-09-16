@@ -1,9 +1,7 @@
 package com.example.culinair.data.remote.apiservice
 
-import com.example.culinair.data.remote.dto.request.UpdateProfileRequest
-import com.example.culinair.data.remote.dto.response.ProfileResponse
-import com.example.culinair.data.remote.dto.response.SupabaseAuthResponse
-import com.example.culinair.data.remote.dto.response.UserSession
+import com.example.culinair.data.remote.model.response.ProfileResponse
+import com.example.culinair.data.remote.model.response.SupabaseAuthResponse
 import com.example.culinair.domain.model.SupabaseGoogleAuthResponse
 import com.google.gson.JsonObject
 import okhttp3.ResponseBody
@@ -12,7 +10,6 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
-import retrofit2.http.Query
 import retrofit2.http.QueryMap
 
 /**

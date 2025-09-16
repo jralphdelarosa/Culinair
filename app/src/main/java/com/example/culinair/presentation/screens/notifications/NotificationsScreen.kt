@@ -57,12 +57,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.culinair.R
-import com.example.culinair.data.remote.dto.response.NotificationResponse
-import com.example.culinair.data.remote.dto.response.NotificationType
+import com.example.culinair.data.remote.model.response.NotificationType
 import com.example.culinair.domain.model.NotificationUIModel
 import com.example.culinair.presentation.theme.AppStandardYellow
 import com.example.culinair.presentation.theme.BrandBackground

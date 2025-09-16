@@ -1,8 +1,8 @@
 package com.example.culinair.data.remote.apiservice
 
-import com.example.culinair.data.remote.dto.request.FCMTokenRequest
-import com.example.culinair.data.remote.dto.response.FCMTokenResponse
-import com.example.culinair.data.remote.dto.response.NotificationResponse
+import com.example.culinair.data.remote.model.request.FCMTokenRequest
+import com.example.culinair.data.remote.model.response.FCMTokenResponse
+import com.example.culinair.data.remote.model.response.NotificationResponse
 import com.example.culinair.domain.model.CountResponse
 import okhttp3.ResponseBody
 import retrofit2.Response

@@ -14,7 +14,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.example.culinair.data.remote.dto.response.UserSession
+import com.example.culinair.data.remote.model.response.UserSession
 import com.example.culinair.domain.repository.AuthRepository
 import com.example.culinair.firebase_notification.FCMTokenManager
 import com.example.culinair.presentation.navost.CulinairNavHost

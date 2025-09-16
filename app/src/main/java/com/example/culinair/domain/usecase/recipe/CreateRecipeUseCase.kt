@@ -2,8 +2,7 @@ package com.example.culinair.domain.usecase.recipe
 
 import android.net.Uri
 import com.example.culinair.data.local.session.SessionManager
-import com.example.culinair.data.remote.dto.request.CreateRecipeRequest
-import com.example.culinair.data.remote.dto.response.Recipe
+import com.example.culinair.data.remote.model.request.CreateRecipeRequest
 import com.example.culinair.domain.repository.RecipeRepository
 import javax.inject.Inject
 

@@ -5,8 +5,8 @@ import android.net.Uri
 import android.util.Log
 import com.example.culinair.data.local.session.SessionManager
 import com.example.culinair.data.remote.apiservice.RecipeApiService
-import com.example.culinair.data.remote.dto.request.CreateRecipeRequest
-import com.example.culinair.data.remote.dto.response.Recipe
+import com.example.culinair.data.remote.model.request.CreateRecipeRequest
+import com.example.culinair.data.remote.model.response.Recipe
 import com.example.culinair.domain.repository.RecipeRepository
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody

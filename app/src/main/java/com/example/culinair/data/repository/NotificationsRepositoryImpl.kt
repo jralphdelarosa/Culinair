@@ -3,9 +3,9 @@ package com.example.culinair.data.repository
 import android.util.Log
 import com.example.culinair.data.local.session.SessionManager
 import com.example.culinair.data.remote.apiservice.NotificationApiService
-import com.example.culinair.data.remote.dto.request.FCMTokenRequest
-import com.example.culinair.data.remote.dto.response.FCMTokenResponse
-import com.example.culinair.data.remote.dto.response.NotificationResponse
+import com.example.culinair.data.remote.model.request.FCMTokenRequest
+import com.example.culinair.data.remote.model.response.FCMTokenResponse
+import com.example.culinair.data.remote.model.response.NotificationResponse
 import com.example.culinair.domain.repository.NotificationsRepository
 import javax.inject.Inject
 

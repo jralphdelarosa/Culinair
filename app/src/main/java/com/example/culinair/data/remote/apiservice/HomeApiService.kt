@@ -1,11 +1,10 @@
 package com.example.culinair.data.remote.apiservice
 
-import com.example.culinair.data.remote.dto.request.CommentRequest
-import com.example.culinair.data.remote.dto.response.AddCommentResponse
-import com.example.culinair.data.remote.dto.response.CommentResponse
-import com.example.culinair.data.remote.dto.response.RecipeResponse
-import com.example.culinair.data.remote.dto.response.LikeResponse
-import com.example.culinair.data.remote.dto.response.SaveResponse
+import com.example.culinair.data.remote.model.response.AddCommentResponse
+import com.example.culinair.data.remote.model.response.CommentResponse
+import com.example.culinair.data.remote.model.response.RecipeResponse
+import com.example.culinair.data.remote.model.response.LikeResponse
+import com.example.culinair.data.remote.model.response.SaveResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET

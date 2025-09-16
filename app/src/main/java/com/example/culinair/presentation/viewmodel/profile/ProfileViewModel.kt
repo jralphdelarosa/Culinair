@@ -7,7 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.culinair.data.remote.dto.response.ProfileResponse
+import com.example.culinair.data.remote.model.response.ProfileResponse
 import com.example.culinair.domain.model.UserStats
 import com.example.culinair.domain.usecase.auth.RestoreSessionUseCase
 import com.example.culinair.domain.usecase.profile.GetProfileUseCase
