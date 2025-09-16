@@ -48,7 +48,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -231,9 +234,28 @@ fun RecipeCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp) // or whatever fits your card
+                        .height(200.dp)
                 )
 
+                // Gradient overlay
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.6f),
+                                    Color.Transparent,
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.4f)
+                                ),
+                                startY = 0f,
+                                endY = Float.POSITIVE_INFINITY
+                            )
+                        )
+                )
+
+                // Save button (top right)
                 IconButton(
                     onClick = {
                         if (!recipe.isSavedByCurrentUser) showSaveAnimation = true
@@ -242,14 +264,74 @@ fun RecipeCard(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
-                        .background(Color.White.copy(alpha = 0.7f), CircleShape)
+                        .background(Color.White.copy(alpha = 0.8f), CircleShape)
                 ) {
                     Icon(
                         imageVector = if (recipe.isSavedByCurrentUser) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Like",
+                        contentDescription = "Save",
                         tint = if (recipe.isSavedByCurrentUser) AppStandardYellow else Color.Gray
                     )
                 }
+
+                // Title overlay (top)
+                Text(
+                    text = recipe.title,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        shadow = Shadow(
+                            color = Color.Black.copy(alpha = 0.8f),
+                            offset = Offset(1f, 1f),
+                            blurRadius = 3f
+                        )
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                        .fillMaxWidth(0.7f) // Leave space for save button
+                )
+
+                // Chef info overlay (bottom)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(Color.White, CircleShape)
+                            .padding(2.dp)
+                    ) {
+                        AsyncImage(
+                            model = recipe.avatarUrl?.ifBlank { "https://via.placeholder.com/400x300?text=No+Image" },
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                                .background(Color.Gray),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "by ${recipe.displayName}",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium,
+                            shadow = Shadow(
+                                color = Color.Black.copy(alpha = 0.8f),
+                                offset = Offset(1f, 1f),
+                                blurRadius = 3f
+                            )
+                        )
+                    )
+                }
+
+                // Animations
                 LikeAnimation(
                     triggerAnimation = showLikeAnimation,
                     onAnimationEnd = { showLikeAnimation = false }
@@ -261,45 +343,12 @@ fun RecipeCard(
             }
 
             Column(modifier = Modifier.padding(12.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        AsyncImage(
-                            model = recipe.avatarUrl?.ifBlank { "https://via.placeholder.com/400x300?text=No+Image" },
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .background(Color.Gray),
-                            contentScale = ContentScale.Crop
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(recipe.displayName, fontWeight = FontWeight.SemiBold)
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.Star,
-                            contentDescription = null,
-                            tint = Color(0xFFFFD700),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text("4.5", style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-
-                Spacer(Modifier.height(6.dp))
-                Text(recipe.title, fontWeight = FontWeight.Bold)
-
-                Spacer(Modifier.height(6.dp))
+                // Cook time and difficulty
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.Default.Schedule,
                             contentDescription = null,
@@ -312,7 +361,7 @@ fun RecipeCard(
                         )
                     }
 
-                    Row {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.Default.BarChart,
                             contentDescription = null,
@@ -323,7 +372,9 @@ fun RecipeCard(
                     }
                 }
 
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
+
+                // Interaction buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
