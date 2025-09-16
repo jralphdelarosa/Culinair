@@ -5,6 +5,7 @@ converterGson = "3.0.0"
 credentials = "1.5.0"
 credentialsPlayServicesAuth = "1.2.2"
 datastorePreferences = "1.1.7"
+firebaseBom = "34.2.0"
 googleid = "1.1.0"
 kotlin = "2.0.21"
 coreKtx = "1.16.0"
@@ -12,7 +13,6 @@ junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 kotlinxSerializationJson = "1.6.3"
-ktorClientLogging = "3.2.3"
 lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.1"
 composeBom = "2024.09.00"
@@ -22,14 +22,11 @@ ksp = "2.0.21-1.0.27"
 lottieCompose = "6.6.7"
 navigationRuntimeAndroid = "2.9.2"
 playServicesAuth = "21.4.0"
-postgrestKt = "3.2.2"
 datastore = "1.0.0"
 coil = "2.6.0"
-storageKt = "3.2.2"
-storageUploadKt = "3.2.2"
-firebaseDataconnect = "17.0.0"
 retrofit = "3.0.0"
 okhttp = "4.9.3"
+workRuntimeKtx = "2.9.0"
 
 [libraries]
 accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefresh" }
@@ -39,7 +36,11 @@ androidx-credentials-play-services-auth = { module = "androidx.credentials:crede
 androidx-datastore-preferences-v117 = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-material = { module = "androidx.compose.material:material" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -73,12 +74,6 @@ okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-i
 
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "postgrestKt" }
-postgrest-kt-extensions = { module = "io.github.jan-tennert.supabase:postgrest-kt-extensions", version.ref = "postgrestKt" }
-storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "storageKt" }
-storage-upload-kt = { module = "io.github.jan-tennert.supabase:storage-kt-upload", version.ref = "storageUploadKt" }
-firebase-dataconnect = { group = "com.google.firebase", name = "firebase-dataconnect", version.ref = "firebaseDataconnect" }
-
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

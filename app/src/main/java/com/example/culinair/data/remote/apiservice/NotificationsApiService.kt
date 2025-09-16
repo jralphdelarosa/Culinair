@@ -1,5 +1,7 @@
 package com.example.culinair.data.remote.apiservice
 
+import com.example.culinair.data.remote.dto.request.FCMTokenRequest
+import com.example.culinair.data.remote.dto.response.FCMTokenResponse
 import com.example.culinair.data.remote.dto.response.NotificationResponse
 import com.example.culinair.domain.model.CountResponse
 import okhttp3.ResponseBody
@@ -9,6 +11,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.PATCH
+import retrofit2.http.POST
 import retrofit2.http.Query
 
 /**
@@ -47,4 +50,32 @@ interface NotificationApiService {
         @Query("id") idEq: String, // pass as "eq.<uuid>"
         @Body body: Map<String, Boolean> = mapOf("is_read" to true)
     ): Response<ResponseBody>
+
+    // FCM Token management
+    @POST("rest/v1/fcm_tokens")
+    suspend fun saveFcmToken(
+        @Header("Authorization") token: String,
+        @Header("Prefer") prefer: String,
+        @Body tokenData: FCMTokenRequest
+    ): Response<ResponseBody>
+
+    @PATCH("rest/v1/fcm_tokens")
+    suspend fun updateFcmToken(
+        @Header("Authorization") token: String,
+        @Query("user_id") userIdEq: String,
+        @Query("device_id") deviceIdEq: String,
+        @Body body: Map<String, String>
+    ): Response<ResponseBody>
+
+    @DELETE("rest/v1/fcm_tokens")
+    suspend fun deleteFcmToken(
+        @Header("Authorization") token: String,
+        @Query("token") tokenEq: String // pass as "eq.token_value"
+    ): Response<ResponseBody>
+
+    @GET("rest/v1/fcm_tokens")
+    suspend fun getUserFcmTokens(
+        @Header("Authorization") token: String,
+        @Query("select") select: String = "id,token,device_id,created_at"
+    ): List<FCMTokenResponse>
 }

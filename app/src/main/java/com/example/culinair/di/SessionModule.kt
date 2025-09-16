@@ -6,6 +6,9 @@ import androidx.datastore.dataStoreFile
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import com.example.culinair.data.local.session.SessionManager
+import com.example.culinair.domain.usecase.notifications.DeleteFcmTokenUseCase
+import com.example.culinair.domain.usecase.notifications.SaveFcmTokenUseCase
+import com.example.culinair.firebase_notification.FCMTokenManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,5 +35,21 @@ object SessionModule {
     @Singleton
     fun provideSessionManager(dataStore: DataStore<Preferences>): SessionManager {
         return SessionManager(dataStore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFCMTokenManager(
+        saveFcmTokenUseCase: SaveFcmTokenUseCase,
+        deleteFcmTokenUseCase: DeleteFcmTokenUseCase,
+        sessionManager: SessionManager,
+        @ApplicationContext context: Context
+    ): FCMTokenManager {
+        return FCMTokenManager(
+            saveFcmTokenUseCase = saveFcmTokenUseCase,
+            deleteFcmTokenUseCase = deleteFcmTokenUseCase,
+            sessionManager = sessionManager,
+            context = context
+        )
     }
 }

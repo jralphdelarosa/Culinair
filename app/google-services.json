@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "367872122759",
+    "project_id": "culinair-43048",
+    "storage_bucket": "culinair-43048.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:367872122759:android:582304ac57bd4d3c2cbd22",
+        "android_client_info": {
+          "package_name": "com.example.culinair"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClZOh-0XAJSAKWoog56DHuJg6wVp1XlX4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

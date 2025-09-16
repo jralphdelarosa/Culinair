@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    id("com.google.gms.google-services")
 }
 
 hilt {
@@ -57,7 +58,6 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.runtime.android)
-    implementation(libs.firebase.dataconnect)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -104,5 +104,13 @@ dependencies {
 
     //lottie animation
     implementation(libs.lottie.compose)
+
+    // Firebase Cloud Messaging
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.analytics)
+
+    // WorkManager for background tasks
+    implementation(libs.androidx.work.runtime.ktx)
 
 }

@@ -20,6 +20,7 @@ import com.example.culinair.domain.repository.HomeRepository
 import com.example.culinair.domain.repository.NotificationsRepository
 import com.example.culinair.domain.repository.ProfileRepository
 import com.example.culinair.domain.repository.RecipeRepository
+import com.example.culinair.firebase_notification.FCMTokenManager
 import com.example.culinair.utils.Constants
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import dagger.Module
@@ -169,9 +170,10 @@ object NetworkModule {
     fun provideAuthRepository(
         service: SupabaseAuthService,
         sessionManager: SessionManager,
-        googleSignInClient: GoogleSignInClient
+        googleSignInClient: GoogleSignInClient,
+        fcmTokenManager: FCMTokenManager
     ): AuthRepository {
-        return AuthRepositoryImpl(service, sessionManager, googleSignInClient)
+        return AuthRepositoryImpl(service, sessionManager, googleSignInClient, fcmTokenManager)
     }
 
     @Provides

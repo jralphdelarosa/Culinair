@@ -3,6 +3,8 @@ package com.example.culinair.data.repository
 import android.util.Log
 import com.example.culinair.data.local.session.SessionManager
 import com.example.culinair.data.remote.apiservice.NotificationApiService
+import com.example.culinair.data.remote.dto.request.FCMTokenRequest
+import com.example.culinair.data.remote.dto.response.FCMTokenResponse
 import com.example.culinair.data.remote.dto.response.NotificationResponse
 import com.example.culinair.domain.repository.NotificationsRepository
 import javax.inject.Inject
@@ -142,6 +144,138 @@ class NotificationsRepositoryImpl @Inject constructor(
             }
         }.onFailure { e ->
             Log.e(TAG, "Exception marking notification $id as read: ${e.message}", e)
+        }
+    }
+
+    override suspend fun saveFcmToken(token: String, deviceId: String?): Result<Boolean> {
+        Log.d(TAG, "saveFcmToken called with FCM token: ${token.take(30)}...")
+
+        val authToken = sessionManager.getAccessToken()
+        if (authToken == null) {
+            Log.e(TAG, "saveFcmToken failed - no access token available")
+            return Result.failure(Exception("No access token"))
+        }
+
+        return runCatching {
+            val deviceInfo = deviceId ?: android.os.Build.MODEL
+            val userId = sessionManager.getUserId()
+
+            if (userId == null) {
+                Log.e(TAG, "saveFcmToken failed - no user ID available")
+                throw Exception("No user ID available")
+            }
+
+            Log.d(TAG, "Attempting to save FCM token for user: $userId, device: $deviceInfo")
+
+            // Try to insert with upsert behavior
+            val response = apiService.saveFcmToken(
+                token = "Bearer $authToken",
+                prefer = "resolution=merge-duplicates",
+                tokenData = FCMTokenRequest(
+                    token = token,
+                    deviceId = deviceInfo,
+                    userId = userId
+                )
+            )
+
+            Log.d(TAG, "FCM token save response: ${response.code()}")
+
+            when {
+                response.isSuccessful -> {
+                    Log.d(TAG, "FCM token saved successfully")
+                    true
+                }
+                response.code() == 409 -> {
+                    Log.d(TAG, "FCM token conflict, attempting update")
+                    updateExistingFcmToken(authToken, userId, deviceInfo, token)
+                }
+                else -> {
+                    val errorBody = try {
+                        response.errorBody()?.string()
+                    } catch (ex: Exception) {
+                        "Error reading error body: ${ex.message}"
+                    }
+                    Log.e(TAG, "Failed to save FCM token: ${response.code()} - $errorBody")
+                    throw Exception("Failed to save FCM token: HTTP ${response.code()}")
+                }
+            }
+        }.onFailure { exception ->
+            Log.e(TAG, "saveFcmToken failed with exception: ${exception.message}", exception)
+        }.onSuccess { success ->
+            Log.d(TAG, "saveFcmToken completed with result: $success")
+        }
+    }
+
+    private suspend fun updateExistingFcmToken(
+        authToken: String,
+        userId: String,
+        deviceId: String,
+        newToken: String
+    ): Boolean {
+        val updateResponse = apiService.updateFcmToken(
+            token = "Bearer $authToken",
+            userIdEq = "eq.$userId",
+            deviceIdEq = "eq.$deviceId",
+            body = mapOf(
+                "token" to newToken,
+                "updated_at" to "now()"
+            )
+        )
+
+        return if (updateResponse.isSuccessful) {
+            Log.d(TAG, "FCM token updated successfully")
+            true
+        } else {
+            val error = updateResponse.errorBody()?.string() ?: "Unknown error"
+            Log.e(TAG, "Failed to update FCM token: ${updateResponse.code()} - $error")
+            throw Exception("Failed to update FCM token: $error")
+        }
+    }
+
+
+    override suspend fun deleteFcmToken(token: String): Result<Boolean> {
+        Log.d(TAG, "deleteFcmToken called")
+
+        val authToken = sessionManager.getAccessToken()
+        if (authToken == null) {
+            Log.e(TAG, "deleteFcmToken failed - no access token available")
+            return Result.failure(Exception("No access token"))
+        }
+
+        return runCatching {
+            val response = apiService.deleteFcmToken(
+                token = authToken,
+                tokenEq = "eq.$token"
+            )
+
+            if (response.isSuccessful) {
+                Log.d(TAG, "FCM token deleted successfully")
+                true
+            } else {
+                val error = response.errorBody()?.string() ?: "Unknown error"
+                Log.e(TAG, "Failed to delete FCM token: ${response.code()} - $error")
+                throw Exception("Failed to delete FCM token: $error")
+            }
+        }.onFailure { exception ->
+            Log.e(TAG, "deleteFcmToken failed with exception: ${exception.message}", exception)
+        }
+    }
+
+    override suspend fun getUserFcmTokens(): Result<List<FCMTokenResponse>> {
+        Log.d(TAG, "getUserFcmTokens called")
+
+        val authToken = sessionManager.getAccessToken()
+        if (authToken == null) {
+            Log.e(TAG, "getUserFcmTokens failed - no access token available")
+            return Result.failure(Exception("No access token"))
+        }
+
+        return runCatching {
+            val tokens = apiService.getUserFcmTokens(token = authToken)
+            Log.d(TAG, "Retrieved ${tokens.size} FCM tokens")
+            tokens
+        }.onFailure { exception ->
+            Log.e(TAG, "getUserFcmTokens failed with exception: ${exception.message}", exception)
         }
     }
 }

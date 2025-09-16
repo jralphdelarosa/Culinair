@@ -6,6 +6,7 @@ import com.example.culinair.data.remote.apiservice.SupabaseAuthService
 import com.example.culinair.data.remote.dto.response.UserSession
 import com.example.culinair.domain.model.AuthMethod
 import com.example.culinair.domain.repository.AuthRepository
+import com.example.culinair.firebase_notification.FCMTokenManager
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +29,8 @@ sealed class RegisterResult {
 class AuthRepositoryImpl @Inject constructor(
     private val service: SupabaseAuthService,
     private val sessionManager: SessionManager,
-    private val googleSignInClient: GoogleSignInClient
+    private val googleSignInClient: GoogleSignInClient,
+    private val fcmTokenManager: FCMTokenManager
 ) : AuthRepository {
 
     private suspend fun refreshSession(): Boolean {
@@ -73,6 +75,9 @@ class AuthRepositoryImpl @Inject constructor(
 
                 if (isValid) {
                     val session = UserSession(accessToken, refreshToken, authMethod, userId)
+
+                    fcmTokenManager.handleUserLogin()
+
                     Result.success(session)
                 } else {
                     // Try to refresh the token
@@ -84,6 +89,9 @@ class AuthRepositoryImpl @Inject constructor(
                         if (newAccessToken != null && newRefreshToken != null) {
                             val session =
                                 UserSession(newAccessToken, newRefreshToken, authMethod, userId)
+
+                            fcmTokenManager.handleUserLogin()
+
                             Result.success(session)
                         } else {
                             // Clear invalid session
@@ -181,6 +189,9 @@ class AuthRepositoryImpl @Inject constructor(
                         authResponse.user.id,
                         AuthMethod.EmailPassword
                     )
+
+                    fcmTokenManager.handleUserLogin()
+
                     Result.success(
                         UserSession(
                             authResponse.access_token,
@@ -241,6 +252,8 @@ class AuthRepositoryImpl @Inject constructor(
                     // Ensure profile exists for Google users too
                     ensureProfileExists(authResponse.user.id, authResponse.access_token)
 
+                    fcmTokenManager.handleUserLogin()
+
                     Result.success(userSession)
                 } else {
                     Result.failure(Exception("Missing token or user ID from Google auth"))
@@ -264,6 +277,8 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun signOut(): Result<Unit> {
         return try {
             Log.d("AuthRepository", "=== UNIVERSAL SIGN OUT START ===")
+
+            fcmTokenManager.handleUserLogout()
 
             val accessToken = sessionManager.getAccessToken()
             val authMethod = sessionManager.getAuthMethod()

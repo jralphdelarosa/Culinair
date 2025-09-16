@@ -1,5 +1,6 @@
 package com.example.culinair.domain.repository
 
+import com.example.culinair.data.remote.dto.response.FCMTokenResponse
 import com.example.culinair.data.remote.dto.response.NotificationResponse
 
 /**
@@ -7,10 +8,12 @@ import com.example.culinair.data.remote.dto.response.NotificationResponse
 */
 interface NotificationsRepository{
     suspend fun fetchNotifications(limit: Int = 50): Result<List<NotificationResponse>>
-
     suspend fun deleteNotification(id: String): Result<Boolean>
-
     suspend fun fetchUnreadCount(): Result<Int>
-
     suspend fun markNotificationAsRead(id: String): Result<Boolean>
+
+    // FCM token management
+    suspend fun saveFcmToken(token: String, deviceId: String? = null): Result<Boolean>
+    suspend fun deleteFcmToken(token: String): Result<Boolean>
+    suspend fun getUserFcmTokens(): Result<List<FCMTokenResponse>>
 }
